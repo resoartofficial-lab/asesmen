@@ -1,0 +1,812 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asesmen Minat, Bakat & Rekomendasi SNBP</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+:root{--P:#0056b3;--PL:#e8f0fc;--G:#28a745;--GL:#e9f7ee;--O:#fd7e14;--OL:#fff3e0;--V:#6f42c1;--VL:#f3eeff;--R:#dc3545;--T:#1a2340;--M:#64748b;--B:#dde3f0;--BG:#f0f4fb;--W:#fff;--SH:0 4px 20px rgba(0,86,179,.1);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--BG);color:var(--T);}
+.hdr{background:linear-gradient(135deg,#003d82,#0056b3,#1a75d6);padding:24px 20px 34px;text-align:center;position:relative;overflow:hidden;}
+.hdr::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fff' fill-opacity='.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");}
+.hdr img{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.4);margin-bottom:9px;position:relative;}
+.hdr h1{font-size:clamp(1.15rem,3.5vw,1.75rem);font-weight:800;color:#fff;position:relative;}
+.hdr p{color:rgba(255,255,255,.82);font-size:.88rem;margin-top:5px;position:relative;}
+.badge{display:inline-block;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:.7rem;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:20px;margin-top:8px;}
+.wrap{max-width:820px;margin:-14px auto 40px;padding:0 15px;}
+.card{background:var(--W);border-radius:16px;padding:22px;box-shadow:var(--SH);margin-bottom:16px;}
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a2340;color:#fff;padding:12px 24px;border-radius:30px;font-size:.85rem;font-weight:700;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+/* IDENTITY */
+.idc{background:linear-gradient(135deg,#f0f7ff,#e8f0fc);border:1.5px solid #c8d9f0;}
+.idc h3{font-size:.96rem;font-weight:700;color:var(--P);margin-bottom:14px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:540px){.frow{grid-template-columns:1fr;}}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fg label{font-size:.77rem;font-weight:600;color:var(--M);text-transform:uppercase;letter-spacing:.5px;}
+.fg input,.fg select{padding:10px 13px;border:1.5px solid var(--B);border-radius:10px;font-family:inherit;font-size:.93rem;color:var(--T);background:#fff;transition:border-color .2s;outline:none;}
+.fg input:focus,.fg select:focus{border-color:var(--P);box-shadow:0 0 0 3px rgba(0,86,179,.12);}
+/* MAPEL CHECKBOX */
+.mpc{background:linear-gradient(135deg,#f5f0ff,#ede8ff);border:1.5px solid #c8aff0;}
+.mpc h3{font-size:.96rem;font-weight:700;color:var(--V);margin-bottom:6px;}
+.mpc .sub{font-size:.8rem;color:var(--M);margin-bottom:14px;}
+.mpcat{margin-bottom:14px;}
+.mpcat-title{font-size:.78rem;font-weight:800;color:var(--P);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;padding:5px 10px;background:var(--PL);border-radius:8px;display:inline-block;}
+.mpgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px;}
+.mpcb{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border:1.5px solid var(--B);border-radius:10px;cursor:pointer;transition:all .15s;user-select:none;}
+.mpcb:hover{border-color:var(--V);background:var(--VL);}
+.mpcb input[type=checkbox]{display:none;}
+.mpcb.checked{background:var(--V);border-color:var(--V);}
+.mpcb.checked .mpcb-txt{color:#fff;}
+.mpcb.checked .mpcb-icon{background:rgba(255,255,255,.3);}
+.mpcb-icon{width:20px;height:20px;border-radius:5px;background:var(--VL);display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;}
+.mpcb-txt{font-size:.8rem;font-weight:600;color:var(--T);}
+.mpsel-info{font-size:.78rem;color:var(--M);margin-top:8px;}
+.mpsel-count{font-weight:800;color:var(--V);}
+/* QUESTIONS */
+.slbl{display:flex;align-items:center;gap:10px;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid var(--PL);}
+.ic{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;background:var(--PL);}
+.slbl h3{font-size:.95rem;font-weight:700;color:var(--P);}
+.slbl p{font-size:.76rem;color:var(--M);}
+.question{margin-bottom:11px;padding:11px 13px;background:#fafbfd;border:1.5px solid var(--B);border-left:4px solid var(--P);border-radius:10px;transition:background .2s;}
+.question:hover{background:var(--PL);}
+.question p{font-size:.88rem;font-weight:600;color:var(--T);margin-bottom:8px;}
+.opts{display:flex;gap:5px;flex-wrap:wrap;}
+.opts label{cursor:pointer;padding:4px 10px;border:1.5px solid var(--B);border-radius:18px;font-size:.73rem;font-weight:600;color:var(--M);background:#fff;transition:all .15s;user-select:none;}
+.opts input[type="radio"]{display:none;}
+.opts label:has(input:checked){background:var(--P);color:#fff;border-color:var(--P);}
+.bsub{width:100%;padding:15px;font-size:1rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#28a745,#1e8c38);border:none;border-radius:12px;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 14px rgba(40,167,69,.35);margin-top:8px;font-family:inherit;}
+.bsub:hover{transform:translateY(-2px);box-shadow:0 7px 22px rgba(40,167,69,.4);}
+.bsub:disabled{background:#aaa;cursor:not-allowed;transform:none;box-shadow:none;}
+/* RESULTS */
+#results{display:none;}
+.rh{background:linear-gradient(135deg,#003d82,#0056b3);border-radius:16px;padding:22px;color:#fff;margin-bottom:16px;}
+.rh h2{font-size:1.2rem;font-weight:800;}
+.rh .rs{opacity:.8;font-size:.84rem;margin-top:4px;}
+.rh .rn{font-size:.95rem;font-weight:600;opacity:.9;margin-top:6px;}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-bottom:16px;}
+.chip{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:var(--SH);border-top:4px solid var(--P);}
+.chip.g{border-top-color:var(--G);}.chip.o{border-top-color:var(--O);}.chip.p{border-top-color:var(--V);}
+.chip .cl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--M);}
+.chip .cv{font-size:.88rem;font-weight:800;color:var(--T);margin-top:3px;}
+/* SNBP CARDS */
+.sc{border-radius:14px;padding:18px;margin-bottom:14px;}
+.sc.b{background:var(--PL);border:1.5px solid #b3ccf0;}
+.sc.g{background:var(--GL);border:1.5px solid #a3d9b3;}
+.sc.o{background:var(--OL);border:1.5px solid #ffd599;}
+.sc.p{background:var(--VL);border:1.5px solid #c8aff0;}
+.sc.teal{background:#e0f7fa;border:1.5px solid #80deea;}
+.sc h4{font-size:.79rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+.sc.b h4{color:var(--P);}.sc.g h4{color:#1a6e30;}.sc.o h4{color:#a04800;}.sc.p h4{color:#4a1e9e;}.sc.teal h4{color:#00695c;}
+/* 4-MAPEL GRID */
+.m4g{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;}
+@media(max-width:460px){.m4g{grid-template-columns:1fr;}}
+.m4i{background:rgba(255,255,255,.78);border-radius:10px;padding:11px 13px;display:flex;align-items:flex-start;gap:9px;}
+.m4n{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.77rem;font-weight:800;color:#fff;flex-shrink:0;background:var(--P);}
+.m4nm{font-size:.87rem;font-weight:700;color:var(--T);}
+.m4k{font-size:.72rem;color:var(--M);margin-top:2px;}
+/* MATCH ANALYSIS */
+.mlist{display:flex;flex-direction:column;gap:9px;}
+.mi2{background:rgba(255,255,255,.78);border-radius:10px;padding:11px 13px;}
+.mih{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.mik{font-size:.87rem;font-weight:700;color:var(--T);}
+.mipct{font-size:.95rem;font-weight:800;}
+.mbb{height:8px;background:rgba(0,0,0,.08);border-radius:4px;overflow:hidden;}
+.mbf{height:100%;border-radius:4px;transition:width .8s ease;}
+.mir{font-size:.72rem;color:var(--M);margin-top:4px;}
+/* MAPEL ANALYSIS */
+.ma-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:9px;}
+.ma-item{background:rgba(255,255,255,.82);border-radius:10px;padding:12px 14px;border-left:4px solid var(--G);}
+.ma-item.warn{border-left-color:var(--O);}
+.ma-item.danger{border-left-color:var(--R);}
+.ma-mapel{font-size:.88rem;font-weight:700;color:var(--T);margin-bottom:4px;}
+.ma-status{font-size:.75rem;font-weight:700;padding:2px 9px;border-radius:12px;display:inline-block;}
+.ma-status.ok{background:#d1fae5;color:#065f46;}
+.ma-status.warn{background:#fef3c7;color:#92400e;}
+.ma-status.no{background:#fee2e2;color:#991b1b;}
+.ma-note{font-size:.72rem;color:var(--M);margin-top:4px;}
+/* RIASEC */
+.rbar-wrap{display:flex;flex-direction:column;gap:6px;margin:10px 0;}
+.rbar-row{display:flex;align-items:center;gap:8px;}
+.rbar-lbl{font-size:.78rem;font-weight:700;color:var(--T);width:128px;flex-shrink:0;}
+.rbar-bg{flex:1;height:20px;background:rgba(0,0,0,.07);border-radius:4px;overflow:hidden;}
+.rbar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:7px;font-size:.7rem;font-weight:800;color:#fff;transition:width .8s ease;}
+.rbar-pct{font-size:.75rem;font-weight:700;color:var(--T);width:40px;text-align:right;flex-shrink:0;}
+.icode-wrap{display:flex;align-items:center;gap:10px;margin:10px 0 14px;flex-wrap:wrap;}
+.icode-lbl{font-size:.76rem;font-weight:700;color:var(--M);text-transform:uppercase;letter-spacing:.6px;}
+.icode-badges{display:flex;gap:7px;}
+.icode-badge{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:900;color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.18);}
+.ri-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:11px;margin-top:11px;}
+.ri-card{background:rgba(255,255,255,.82);border-radius:11px;padding:13px 14px;border-left:4px solid var(--P);}
+.ri-card-head{display:flex;align-items:center;gap:9px;margin-bottom:8px;}
+.ri-badge{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.88rem;font-weight:900;color:#fff;flex-shrink:0;}
+.ri-title{font-size:.88rem;font-weight:800;color:var(--T);}
+.ri-en{font-size:.7rem;color:var(--M);}
+.ri-desc{font-size:.77rem;color:#334155;line-height:1.55;margin-bottom:8px;}
+.ri-ciri{display:flex;flex-direction:column;gap:3px;margin-bottom:8px;}
+.ri-ciri-item{font-size:.74rem;color:#475569;display:flex;align-items:flex-start;gap:4px;}
+.ri-ciri-item::before{content:"\2726";font-size:.57rem;color:var(--P);margin-top:2px;flex-shrink:0;}
+.ri-stitle{font-size:.69rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--M);margin:7px 0 5px;}
+.ri-tags{display:flex;flex-wrap:wrap;gap:5px;}
+.ri-tag{padding:3px 9px;border-radius:13px;font-size:.7rem;font-weight:700;background:var(--PL);color:var(--P);}
+.ri-tag.pw{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;}
+.ri-divider{height:1px;background:var(--B);margin:8px 0;}
+/* PRODI/CASEL */
+.plist{list-style:none;}
+.plist li{padding:7px 11px;background:rgba(255,255,255,.72);border-radius:7px;margin-bottom:5px;font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:7px;}
+.plist li::before{content:'\1F393';font-size:.84rem;}
+.mtags{display:flex;flex-wrap:wrap;gap:6px;}
+.mtag{padding:5px 12px;border-radius:17px;font-size:.79rem;font-weight:700;}
+.rdesc{background:rgba(255,255,255,.78);border-radius:10px;padding:10px 12px;margin-bottom:7px;font-size:.82rem;}
+.rdesc strong{color:var(--P);}
+.cbar-wrap{display:flex;flex-direction:column;gap:6px;margin:9px 0;}
+.cbar-row{display:flex;align-items:center;gap:7px;}
+.cbar-lbl{font-size:.76rem;font-weight:700;color:var(--T);width:158px;flex-shrink:0;}
+.cbar-bg{flex:1;height:16px;background:rgba(0,0,0,.07);border-radius:4px;overflow:hidden;}
+.cbar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:.67rem;font-weight:800;color:#fff;transition:width .8s ease;}
+.cbar-pct{font-size:.74rem;font-weight:700;width:40px;text-align:right;flex-shrink:0;}
+.clow{background:#fff8e1;border:1.5px solid #ffe082;border-radius:11px;padding:13px 16px;margin-bottom:11px;font-size:.82rem;color:#7a4800;}
+.clow strong{display:block;margin-bottom:3px;}
+.clow ul{margin-left:15px;margin-top:4px;}
+.clow li{margin-bottom:3px;}
+.snote{background:#fff0f1;border:1.5px solid #f5b8bc;border-radius:11px;padding:13px 16px;font-size:.82rem;color:#9b1a24;}
+.snote strong{display:block;margin-bottom:3px;}
+.abtns{display:flex;gap:11px;flex-wrap:wrap;margin-top:20px;}
+.bpdf{flex:1;min-width:150px;padding:12px 18px;font-size:.88rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#dc3545,#b02030);border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-family:inherit;transition:transform .15s;}
+.bpdf:hover{transform:translateY(-2px);}
+.brst{flex:1;min-width:150px;padding:12px 18px;font-size:.88rem;font-weight:700;color:var(--P);background:var(--PL);border:2px solid var(--P);border-radius:10px;cursor:pointer;font-family:inherit;}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.fin{animation:fi .45s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.saving-banner{background:#e8f5e9;border:1.5px solid #a5d6a7;border-radius:10px;padding:10px 14px;font-size:.82rem;color:#2e7d32;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhxUfjaMaZki71LlfdFfpmDS9fIwpEgSermSKyPckTqT1GLBMoiWI8ViN3iNidPknuYe_j6fU5ABwjMfmESfF-JJscnGtJ1X_FIO_oujY5DG2ZDHuIAv81n9zYbGYrfpRSHp0-l3MUQ_dpbLPVyBT6toceOJvfhjags94mXtihfigEPNQUzmg_Ix7BxYXT2/s400/Logo-Minat-Bakat-768x587.png" alt="Logo" onerror="this.style.display='none'">
+  <h1>&#128221; Asesmen Minat, Bakat &amp; Rekomendasi SNBP</h1>
+  <p>Kenali potensi dirimu &mdash; temukan jalur kuliah terbaikmu</p>
+  <div class="badge">&#127963; KEPMENDIKBUDRISTEK No. 345/M/2022 &middot; SNBP &middot; The RIASEC Test</div>
+</div>
+<div class="wrap">
+  <!-- DATA DIRI -->
+  <div class="card idc">
+    <h3>&#128100; Data Diri Siswa</h3>
+    <div class="frow">
+      <div class="fg"><label>Nama Lengkap *</label><input type="text" id="sname" placeholder="Masukkan nama lengkap"></div>
+      <div class="fg"><label>Kelas / Angkatan</label><input type="text" id="skelas" placeholder="Contoh: XII IPA 2"></div>
+      <div class="fg"><label>Jurusan / Program SMA *</label>
+        <select id="smaj">
+          <option value="IPA">IPA (K13) / Saintek (Merdeka)</option>
+          <option value="IPS">IPS (K13) / Soshum (Merdeka)</option>
+          <option value="BAHASA">Bahasa / Humaniora</option>
+        </select>
+      </div>
+      <div class="fg"><label>&#127775; Cita-cita / Karier Impian *</label><input type="text" id="sdream" placeholder="Contoh: Dokter, Programmer, Arsitek..."></div>
+    </div>
+  </div>
+
+  <!-- PILIHAN MAPEL FAVORIT -->
+  <div class="card mpc">
+    <h3>&#128218; Mata Pelajaran Favoritmu di SMA</h3>
+    <p class="sub">Centang semua mata pelajaran yang kamu <strong>sukai / minati</strong> (boleh lebih dari satu). Ini akan dianalisis kesesuaiannya dengan cita-citamu.</p>
+    <div id="mapel-container"></div>
+    <p class="mpsel-info">Terpilih: <span class="mpsel-count" id="mpsel-count">0</span> mata pelajaran</p>
+  </div>
+
+  <!-- KUESIONER -->
+  <div class="card">
+    <div class="slbl">
+      <div class="ic">&#127959;</div>
+      <div>
+        <h3>Kuesioner Minat, Bakat &amp; Sosial Emosional</h3>
+        <p>127 soal (42 RIASEC &middot; 40 MI &middot; 20 VARK &middot; 25 CASEL) &mdash; 1 = Tidak Setuju/Suka &nbsp;|&nbsp; 5 = Sangat Setuju/Suka</p>
+      </div>
+    </div>
+    <div id="qcont"></div>
+    <button class="bsub" id="submitBtn" onclick="calc()">&#128269; Lihat Hasil Asesmen &amp; Rekomendasi SNBP</button>
+  </div>
+
+  <div id="results"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════
+// KONFIGURASI GOOGLE SHEETS
+// Isi SCRIPT_URL setelah deploy Apps Script
+// ════════════════════════════════════════════
+
+// ════════════════════════════════════════════
+// MATA PELAJARAN SMA LENGKAP (semua kurikulum)
+// ════════════════════════════════════════════
+const MAPEL_SMA = {
+  'Kelompok A (Wajib)': [
+    'Pendidikan Agama & Budi Pekerti','PPKn / Pendidikan Pancasila',
+    'Bahasa Indonesia','Matematika Wajib','Sejarah Indonesia',
+    'Bahasa Inggris'
+  ],
+  'Kelompok B (Wajib)': [
+    'Seni Budaya','Pendidikan Jasmani Olahraga & Kesehatan (PJOK)',
+    'Prakarya & Kewirausahaan'
+  ],
+  'Peminatan IPA / Saintek': [
+    'Matematika Peminatan / Tingkat Lanjut','Biologi','Fisika','Kimia',
+    'Informatika'
+  ],
+  'Peminatan IPS / Soshum': [
+    'Ekonomi','Geografi','Sosiologi','Sejarah Peminatan'
+  ],
+  'Peminatan Bahasa / Humaniora': [
+    'Bahasa & Sastra Indonesia','Bahasa & Sastra Inggris',
+    'Bahasa Asing Lain (Arab/Jepang/Mandarin/Jerman/Prancis/Korea)',
+    'Antropologi'
+  ],
+  'Lintas Minat / Pilihan': [
+    'Matematika Tingkat Lanjut (lintas)','Biologi (lintas)','Fisika (lintas)',
+    'Kimia (lintas)','Ekonomi (lintas)','Sosiologi (lintas)',
+    'Geografi (lintas)','Sejarah (lintas)','Bahasa Inggris Lanjut (lintas)'
+  ]
+};
+
+// Mapel → tipe RIASEC (untuk analisis kesesuaian)
+const MAPEL_RIASEC = {
+  'Matematika Wajib':'IC','Matematika Peminatan / Tingkat Lanjut':'IC',
+  'Matematika Tingkat Lanjut (lintas)':'IC','Fisika':'IR','Kimia':'IR',
+  'Biologi':'IR','Biologi (lintas)':'IR','Fisika (lintas)':'IR',
+  'Kimia (lintas)':'IR','Informatika':'IC','Ekonomi':'EC','Ekonomi (lintas)':'EC',
+  'Sosiologi':'SE','Sosiologi (lintas)':'SE','Geografi':'RI','Geografi (lintas)':'RI',
+  'Sejarah Indonesia':'SA','Sejarah Peminatan':'SA','Sejarah (lintas)':'SA',
+  'Bahasa Indonesia':'AS','Bahasa Inggris':'AE','Bahasa & Sastra Indonesia':'A',
+  'Bahasa & Sastra Inggris':'A','Bahasa Asing Lain (Arab/Jepang/Mandarin/Jerman/Prancis/Korea)':'A',
+  'Antropologi':'SI','Seni Budaya':'A','PJOK / Pendidikan Jasmani Olahraga & Kesehatan (PJOK)':'RS',
+  'Pendidikan Agama & Budi Pekerti':'S','PPKn / Pendidikan Pancasila':'SE',
+  'Prakarya & Kewirausahaan':'RE'
+};
+
+// Mapel → label singkat untuk lookup
+const normMapel = (m) => m.replace(/\(.*?\)/g,'').trim();
+
+// ════════════════════════════════════════════
+// SNBP DATABASE (ringkas — 4 mapel per prodi)
+// ════════════════════════════════════════════
+const SNBP=[
+  {kw:['dokter','kedokteran','medis','physician'],prodi:'Ilmu atau Sains Kedokteran',no:36,ru:'Ilmu Terapan',m:{IPA:[{n:'Biologi',k:'Anatomi, fisiologi & genetika'},{n:'Kimia',k:'Biokimia, farmakologi & reaksi obat'},{n:'Matematika Wajib',k:'Statistika medis & data klinis'},{n:'Fisika',k:'Fisika medis, radiologi & diagnostik'}],IPS:[{n:'Matematika Wajib',k:'Statistika & analisis'},{n:'Biologi (lintas)',k:'Fondasi kedokteran'},{n:'Kimia (lintas)',k:'Biokimia dasar'},{n:'Bahasa Indonesia',k:'Komunikasi medis'}],BAHASA:[{n:'Matematika Wajib',k:'Logika & kalkulasi'},{n:'Bahasa Indonesia',k:'Rekam medis'},{n:'Bahasa Inggris',k:'Literatur medis'},{n:'Biologi (lintas)',k:'Wajib diambil'}]}},
+  {kw:['apoteker','farmasi','obat'],prodi:'Ilmu Farmasi',no:39,ru:'Ilmu Terapan',m:{IPA:[{n:'Kimia',k:'Senyawa & formulasi'},{n:'Biologi',k:'Farmakokinetik'},{n:'Matematika Wajib',k:'Perhitungan dosis'},{n:'Fisika',k:'Instrumentasi'}],IPS:[{n:'Matematika Wajib',k:'Kalkulasi'},{n:'Kimia (lintas)',k:'Sangat esensial'},{n:'Bahasa Indonesia',k:'Konseling'},{n:'Ekonomi',k:'Manajemen apotek'}],BAHASA:[{n:'Matematika Wajib',k:'Kalkulasi'},{n:'Bahasa Inggris',k:'Literatur farmasi'},{n:'Kimia (lintas)',k:'Esensial'},{n:'Bahasa Indonesia',k:'Informasi obat'}]}},
+  {kw:['perawat','keperawatan','nurse'],prodi:'Keperawatan',no:43,ru:'Ilmu Terapan',m:{IPA:[{n:'Biologi',k:'Anatomi & fisiologi'},{n:'Kimia',k:'Farmakologi'},{n:'Matematika Wajib',k:'Kalkulasi dosis'},{n:'PJOK / Pendidikan Jasmani Olahraga & Kesehatan (PJOK)',k:'Kesehatan fisik'}],IPS:[{n:'Matematika Wajib',k:'Kalkulasi'},{n:'Sosiologi',k:'Perilaku pasien'},{n:'Biologi (lintas)',k:'Sangat disarankan'},{n:'Bahasa Indonesia',k:'Komunikasi terapeutik'}],BAHASA:[{n:'Matematika Wajib',k:'Kalkulasi'},{n:'Bahasa Indonesia',k:'Komunikasi'},{n:'Bahasa Inggris',k:'Standar internasional'},{n:'Biologi (lintas)',k:'Disarankan'}]}},
+  {kw:['programmer','coding','developer','informatika','sistem informasi'],prodi:'Teknik atau Rekayasa (Informatika)',no:33,ru:'Ilmu Terapan',m:{IPA:[{n:'Matematika Peminatan / Tingkat Lanjut',k:'Algoritma & logika'},{n:'Fisika',k:'Elektronika & hardware'},{n:'Informatika',k:'Pemrograman dasar'},{n:'Bahasa Inggris',k:'Dokumentasi teknis'}],IPS:[{n:'Matematika Wajib',k:'Logika'},{n:'Bahasa Inggris',k:'Coding & dokumentasi'},{n:'Ekonomi',k:'Bisnis digital'},{n:'Informatika',k:'Pemrograman'}],BAHASA:[{n:'Matematika Wajib',k:'Logika'},{n:'Bahasa Inggris',k:'Dokumentasi'},{n:'Informatika',k:'Pemrograman'},{n:'Bahasa Indonesia',k:'Dokumentasi teknis'}]}},
+  {kw:['ilmu komputer','sains data','data analyst','data scientist','ai','machine learning'],prodi:'Sains Data / Ilmu Komputer',no:57,ru:'Ilmu Formal',m:{IPA:[{n:'Matematika Peminatan / Tingkat Lanjut',k:'Statistika & ML'},{n:'Informatika',k:'Pemrograman'},{n:'Fisika',k:'Komputasi'},{n:'Bahasa Inggris',k:'Riset & publikasi'}],IPS:[{n:'Matematika Wajib',k:'Statistika'},{n:'Ekonomi',k:'Analisis bisnis'},{n:'Bahasa Inggris',k:'Referensi data science'},{n:'Informatika',k:'Pemrograman'}],BAHASA:[{n:'Matematika Wajib',k:'Statistika'},{n:'Bahasa Inggris',k:'Coding & dokumentasi'},{n:'Informatika',k:'Pemrograman'},{n:'Bahasa Indonesia',k:'Analisis data'}]}},
+  {kw:['arsitek','arsitektur'],prodi:'Arsitektur',no:23,ru:'Ilmu Terapan',m:{IPA:[{n:'Matematika Wajib',k:'Geometri & struktur'},{n:'Fisika',k:'Statika & material'},{n:'Seni Budaya',k:'Estetika & desain'},{n:'Bahasa Inggris',k:'Standar internasional'}],IPS:[{n:'Matematika Wajib',k:'Geometri'},{n:'Seni Budaya',k:'Desain'},{n:'Ekonomi',k:'Manajemen proyek'},{n:'Bahasa Inggris',k:'Referensi internasional'}],BAHASA:[{n:'Matematika Wajib',k:'Geometri'},{n:'Seni Budaya',k:'Desain'},{n:'Bahasa Inggris',k:'Referensi'},{n:'Bahasa Indonesia',k:'Dokumentasi'}]}},
+  {kw:['teknik sipil','konstruksi','civil engineer'],prodi:'Teknik atau Rekayasa (Sipil)',no:33,ru:'Ilmu Terapan',m:{IPA:[{n:'Matematika Peminatan / Tingkat Lanjut',k:'Kalkulus & mekanika'},{n:'Fisika',k:'Statika & material'},{n:'Kimia',k:'Bahan bangunan'},{n:'Bahasa Inggris',k:'Standar teknis'}],IPS:[{n:'Matematika Wajib',k:'Kalkulasi'},{n:'Fisika (lintas)',k:'Mekanika'},{n:'Ekonomi',k:'RAB & manajemen'},{n:'Bahasa Inggris',k:'Standar'}],BAHASA:[{n:'Matematika Wajib',k:'Kalkulasi'},{n:'Fisika (lintas)',k:'Mekanika'},{n:'Bahasa Inggris',k:'Standar'},{n:'Bahasa Indonesia',k:'Kontrak'}]}},
+  {kw:['desain grafis','desainer','dkv','animator','illustrator'],prodi:'Desain (Komunikasi Visual)',no:25,ru:'Ilmu Terapan',m:{IPA:[{n:'Seni Budaya',k:'Komposisi & warna'},{n:'Matematika Wajib',k:'Proporsi & grid'},{n:'Bahasa Indonesia',k:'Copywriting'},{n:'Bahasa Inggris',k:'Tren global'}],IPS:[{n:'Seni Budaya',k:'Desain visual'},{n:'Matematika Wajib',k:'Proporsi'},{n:'Bahasa Indonesia',k:'Copywriting'},{n:'Ekonomi',k:'Bisnis kreatif'}],BAHASA:[{n:'Seni Budaya',k:'Visual & kreatif'},{n:'Bahasa Indonesia',k:'Copywriting'},{n:'Bahasa Inggris',k:'Tren global'},{n:'Matematika Wajib',k:'Grid'}]}},
+  {kw:['psikolog','psikologi','konselor'],prodi:'Psikologi',no:9,ru:'Ilmu Sosial',m:{IPA:[{n:'Sosiologi (lintas)',k:'Perilaku sosial'},{n:'Matematika Wajib',k:'Statistika psikologi'},{n:'Biologi',k:'Neuropsikologi'},{n:'Bahasa Indonesia',k:'Komunikasi terapeutik'}],IPS:[{n:'Sosiologi',k:'Perilaku sosial'},{n:'Matematika Wajib',k:'Psikometri'},{n:'Bahasa Indonesia',k:'Konseling'},{n:'Ekonomi',k:'Psikologi organisasi'}],BAHASA:[{n:'Sosiologi (lintas)',k:'Dinamika sosial'},{n:'Bahasa Indonesia',k:'Konseling'},{n:'Bahasa Inggris',k:'DSM & literatur'},{n:'Matematika Wajib',k:'Statistika'}]}},
+  {kw:['guru','pendidik','pengajar','teacher'],prodi:'Pendidikan (Kependidikan)',no:32,ru:'Ilmu Terapan',m:{IPA:[{n:'Mapel bidang studi yg diajarkan',k:'Sesuai prodi'},{n:'Bahasa Indonesia',k:'Pedagogik'},{n:'Sosiologi (lintas)',k:'Psikologi perkembangan'},{n:'Bahasa Inggris',k:'Referensi'}],IPS:[{n:'Mapel bidang studi yg diajarkan',k:'Sesuai prodi'},{n:'Sosiologi',k:'Dinamika kelas'},{n:'Bahasa Indonesia',k:'Pedagogik'},{n:'Ekonomi',k:'Guru Ekonomi/IPS'}],BAHASA:[{n:'Bahasa Indonesia',k:'Guru BahInd/Sastra'},{n:'Bahasa Inggris',k:'Guru BahIng'},{n:'Sosiologi (lintas)',k:'Psikologi'},{n:'Seni Budaya',k:'Guru Seni'}]}},
+  {kw:['pengacara','hukum','hakim','jaksa','notaris','lawyer'],prodi:'Hukum',no:46,ru:'Ilmu Terapan',m:{IPA:[{n:'Sosiologi (lintas)',k:'Sosiologi hukum'},{n:'PPKn / Pendidikan Pancasila',k:'Tata negara'},{n:'Matematika Wajib',k:'Logika hukum'},{n:'Bahasa Indonesia',k:'Argumentasi'}],IPS:[{n:'Sosiologi',k:'Sosiologi hukum'},{n:'PPKn / Pendidikan Pancasila',k:'Konstitusi'},{n:'Bahasa Indonesia',k:'Argumentasi'},{n:'Ekonomi',k:'Hukum bisnis'}],BAHASA:[{n:'PPKn / Pendidikan Pancasila',k:'Konstitusi'},{n:'Sosiologi (lintas)',k:'Hukum sosial'},{n:'Bahasa Indonesia',k:'Argumentasi'},{n:'Bahasa Inggris',k:'Hukum internasional'}]}},
+  {kw:['akuntan','akuntansi','auditor','pajak'],prodi:'Ilmu atau Sains Akuntansi',no:26,ru:'Ilmu Terapan',m:{IPA:[{n:'Ekonomi (lintas)',k:'Akuntansi & keuangan'},{n:'Matematika Wajib',k:'Kalkulasi keuangan'},{n:'Bahasa Inggris',k:'IFRS & standar'},{n:'Bahasa Indonesia',k:'Laporan keuangan'}],IPS:[{n:'Ekonomi',k:'Akuntansi & keuangan'},{n:'Matematika Wajib',k:'Analisis keuangan'},{n:'Bahasa Inggris',k:'Standar IFRS'},{n:'Bahasa Indonesia',k:'Pelaporan bisnis'}],BAHASA:[{n:'Ekonomi (lintas)',k:'Prinsip akuntansi'},{n:'Matematika Wajib',k:'Kalkulasi'},{n:'Bahasa Inggris',k:'Standar'},{n:'Bahasa Indonesia',k:'Laporan'}]}},
+  {kw:['manajer','manajemen','bisnis','wirausaha','entrepreneur','pengusaha'],prodi:'Ilmu atau Sains Manajemen',no:27,ru:'Ilmu Terapan',m:{IPA:[{n:'Ekonomi (lintas)',k:'Manajemen bisnis'},{n:'Matematika Wajib',k:'Analisis data'},{n:'Sosiologi (lintas)',k:'SDM'},{n:'Bahasa Inggris',k:'Bisnis internasional'}],IPS:[{n:'Ekonomi',k:'Manajemen & strategi'},{n:'Matematika Wajib',k:'Statistik bisnis'},{n:'Sosiologi',k:'Perilaku konsumen'},{n:'Bahasa Inggris',k:'Komunikasi bisnis'}],BAHASA:[{n:'Ekonomi (lintas)',k:'Manajemen'},{n:'Bahasa Inggris',k:'Business English'},{n:'Bahasa Indonesia',k:'Komunikasi bisnis'},{n:'Sosiologi (lintas)',k:'Organisasi'}]}},
+  {kw:['ekonom','ekonomi','keuangan','finance','banker','perbankan'],prodi:'Ilmu Ekonomi',no:7,ru:'Ilmu Sosial',m:{IPA:[{n:'Matematika Wajib',k:'Ekonometrika'},{n:'Ekonomi (lintas)',k:'Teori ekonomi'},{n:'Bahasa Inggris',k:'Literatur ekonomi'},{n:'Sosiologi (lintas)',k:'Ekonomi sosial'}],IPS:[{n:'Ekonomi',k:'Teori ekonomi'},{n:'Matematika Wajib',k:'Ekonometrika'},{n:'Bahasa Inggris',k:'Literatur'},{n:'Sosiologi',k:'Ekonomi perilaku'}],BAHASA:[{n:'Ekonomi (lintas)',k:'Teori dasar'},{n:'Matematika Wajib',k:'Kalkulasi'},{n:'Bahasa Inggris',k:'Literatur'},{n:'Bahasa Indonesia',k:'Analisis'}]}},
+  {kw:['jurnalis','wartawan','journalist','penyiar','reporter'],prodi:'Ilmu atau Sains Komunikasi (Jurnalistik)',no:31,ru:'Ilmu Terapan',m:{IPA:[{n:'Sosiologi (lintas)',k:'Analisis sosial'},{n:'Bahasa Indonesia',k:'Penulisan berita'},{n:'Bahasa Inggris',k:'Jurnalisme internasional'},{n:'Matematika Wajib',k:'Data journalism'}],IPS:[{n:'Sosiologi',k:'Analisis sosial'},{n:'Bahasa Indonesia',k:'Penulisan berita'},{n:'Bahasa Inggris',k:'Jurnalisme global'},{n:'Sejarah Peminatan',k:'Konteks historis'}],BAHASA:[{n:'Bahasa Indonesia',k:'Penulisan'},{n:'Bahasa Inggris',k:'Jurnalisme'},{n:'Sosiologi (lintas)',k:'Analisis'},{n:'Sejarah Indonesia',k:'Konteks'}]}},
+  {kw:['sastra','penulis','writer','author','linguistik'],prodi:'Susastra / Sastra / Linguistik',no:4,ru:'Humaniora',m:{IPA:[{n:'Bahasa Indonesia',k:'Sastra & tata bahasa'},{n:'Bahasa Inggris',k:'Sastra & linguistik'},{n:'Sejarah Indonesia',k:'Konteks budaya'},{n:'Seni Budaya',k:'Estetika sastra'}],IPS:[{n:'Bahasa Indonesia',k:'Sastra & analisis'},{n:'Bahasa Inggris',k:'Sastra'},{n:'Sejarah Indonesia',k:'Sejarah budaya'},{n:'Sosiologi',k:'Sastra sosial'}],BAHASA:[{n:'Bahasa & Sastra Indonesia',k:'Inti prodi'},{n:'Bahasa & Sastra Inggris',k:'Komparatif'},{n:'Sejarah Indonesia',k:'Konteks historis'},{n:'Seni Budaya',k:'Estetika'}]}},
+  {kw:['seniman','seni rupa','seni murni'],prodi:'Seni Rupa / Seni Murni',no:1,ru:'Humaniora',m:{IPA:[{n:'Seni Budaya',k:'Teknik berkarya'},{n:'Matematika Wajib',k:'Geometri seni'},{n:'Bahasa Indonesia',k:'Narasi artistik'},{n:'Bahasa Inggris',k:'Referensi global'}],IPS:[{n:'Seni Budaya',k:'Teknik & estetika'},{n:'Sejarah Indonesia',k:'Seni Nusantara'},{n:'Bahasa Indonesia',k:'Kritik seni'},{n:'Ekonomi',k:'Industri kreatif'}],BAHASA:[{n:'Seni Budaya',k:'Inti berkarya'},{n:'Bahasa Indonesia',k:'Kritik seni'},{n:'Bahasa Inggris',k:'Tren global'},{n:'Sejarah Indonesia',k:'Warisan seni'}]}},
+  {kw:['musik','musisi','komposer','singer','penyanyi'],prodi:'Seni Musik',no:1,ru:'Humaniora',m:{IPA:[{n:'Seni Budaya',k:'Teori musik & harmoni'},{n:'Matematika Wajib',k:'Ritme & interval'},{n:'Fisika',k:'Akustik & bunyi'},{n:'Bahasa Inggris',k:'Notasi internasional'}],IPS:[{n:'Seni Budaya',k:'Teori & praktik'},{n:'Sejarah Indonesia',k:'Musik tradisi'},{n:'Bahasa Indonesia',k:'Lirik & analisis'},{n:'Bahasa Inggris',k:'Referensi internasional'}],BAHASA:[{n:'Seni Budaya',k:'Teori & praktik'},{n:'Bahasa Indonesia',k:'Lirik & puisi'},{n:'Bahasa Inggris',k:'Referensi'},{n:'Sejarah Indonesia',k:'Tradisi Nusantara'}]}},
+  {kw:['petani','pertanian','agronomi','agribisnis'],prodi:'Ilmu dan Sains Pertanian',no:20,ru:'Ilmu Terapan',m:{IPA:[{n:'Biologi',k:'Botani & genetika tanaman'},{n:'Kimia',k:'Pupuk & kimia tanah'},{n:'Matematika Wajib',k:'Statistika pertanian'},{n:'Fisika',k:'Agrofisika'}],IPS:[{n:'Matematika Wajib',k:'Analisis ekonomi'},{n:'Ekonomi',k:'Agribisnis'},{n:'Biologi (lintas)',k:'Botani'},{n:'Sosiologi',k:'Penyuluhan'}],BAHASA:[{n:'Matematika Wajib',k:'Kalkulasi'},{n:'Bahasa Indonesia',k:'Penyuluhan'},{n:'Biologi (lintas)',k:'Botani'},{n:'Ekonomi (lintas)',k:'Bisnis tani'}]}},
+  {kw:['dokter hewan','veteriner'],prodi:'Ilmu atau Sains Veteriner',no:38,ru:'Ilmu Terapan',m:{IPA:[{n:'Biologi',k:'Anatomi hewan'},{n:'Kimia',k:'Farmakologi veteriner'},{n:'Matematika Wajib',k:'Statistika'},{n:'Fisika',k:'Diagnostik'}],IPS:[{n:'Matematika Wajib',k:'Statistika'},{n:'Biologi (lintas)',k:'Sangat esensial'},{n:'Kimia (lintas)',k:'Farmakologi'},{n:'Sosiologi',k:'Zoonosis'}],BAHASA:[{n:'Matematika Wajib',k:'Kalkulasi'},{n:'Biologi (lintas)',k:'Anatomi'},{n:'Bahasa Inggris',k:'Literatur'},{n:'Kimia (lintas)',k:'Farmakologi'}]}},
+  {kw:['atlet','olahraga','keolahragaan','pelatih','coach'],prodi:'Ilmu atau Sains Keolahragaan',no:49,ru:'Ilmu Terapan',m:{IPA:[{n:'PJOK / Pendidikan Jasmani Olahraga & Kesehatan (PJOK)',k:'Teori & praktik'},{n:'Biologi',k:'Fisiologi olahraga'},{n:'Matematika Wajib',k:'Statistika'},{n:'Fisika',k:'Biomekanika'}],IPS:[{n:'PJOK / Pendidikan Jasmani Olahraga & Kesehatan (PJOK)',k:'Teori & praktik'},{n:'Biologi (lintas)',k:'Fisiologi'},{n:'Sosiologi',k:'Sosiologi olahraga'},{n:'Matematika Wajib',k:'Statistika'}],BAHASA:[{n:'PJOK / Pendidikan Jasmani Olahraga & Kesehatan (PJOK)',k:'Teori'},{n:'Bahasa Indonesia',k:'Komunikasi kepelatihan'},{n:'Matematika Wajib',k:'Analisis'},{n:'Biologi (lintas)',k:'Fisiologi'}]}},
+  {kw:['pariwisata','hotel','hospitality','tourism','perhotelan'],prodi:'Pariwisata / Manajemen Perhotelan',no:50,ru:'Ilmu Terapan',m:{IPA:[{n:'Ekonomi (lintas)',k:'Manajemen hospitality'},{n:'Bahasa Inggris',k:'Komunikasi internasional'},{n:'Sosiologi (lintas)',k:'Perilaku wisatawan'},{n:'Matematika Wajib',k:'Keuangan'}],IPS:[{n:'Ekonomi',k:'Manajemen pariwisata'},{n:'Bahasa Inggris',k:'Hospitality English'},{n:'Sosiologi',k:'Budaya wisatawan'},{n:'Sejarah Indonesia',k:'Heritage tourism'}],BAHASA:[{n:'Bahasa Inggris',k:'Komunikasi internasional'},{n:'Bahasa Indonesia',k:'Panduan wisata'},{n:'Sosiologi (lintas)',k:'Budaya'},{n:'Ekonomi (lintas)',k:'Manajemen'}]}},
+  {kw:['diplomat','hubungan internasional','hi'],prodi:'Ilmu Sosial (Hubungan Internasional)',no:6,ru:'Ilmu Sosial',m:{IPA:[{n:'Sosiologi (lintas)',k:'Geopolitik'},{n:'Sejarah Indonesia',k:'Diplomasi'},{n:'Bahasa Inggris',k:'Negosiasi internasional'},{n:'Matematika Wajib',k:'Analisis data'}],IPS:[{n:'Sosiologi',k:'Dinamika internasional'},{n:'Sejarah Peminatan',k:'Hubungan internasional'},{n:'Bahasa Inggris',k:'Diplomatik'},{n:'Ekonomi',k:'Ekonomi politik'}],BAHASA:[{n:'Sosiologi (lintas)',k:'Dinamika'},{n:'Bahasa Inggris',k:'Diplomatik'},{n:'Bahasa Indonesia',k:'Kebijakan RI'},{n:'Sejarah Indonesia',k:'Diplomasi'}]}},
+  {kw:['lingkungan','ekologi','teknik lingkungan'],prodi:'Ilmu atau Sains Lingkungan',no:34,ru:'Ilmu Terapan',m:{IPA:[{n:'Biologi',k:'Ekologi & biodiversitas'},{n:'Kimia',k:'Kimia lingkungan'},{n:'Matematika Wajib',k:'Pemodelan'},{n:'Fisika',k:'Fisika lingkungan'}],IPS:[{n:'Matematika Wajib',k:'Analisis'},{n:'Sosiologi',k:'AMDAL sosial'},{n:'Geografi',k:'GIS & pemetaan'},{n:'Biologi (lintas)',k:'Ekologi'}],BAHASA:[{n:'Matematika Wajib',k:'Analisis'},{n:'Geografi (lintas)',k:'Pemetaan'},{n:'Bahasa Indonesia',k:'AMDAL'},{n:'Biologi (lintas)',k:'Ekologi'}]}},
+  {kw:['pilot','penerbangan','aviasi'],prodi:'Transportasi / Penerbangan',no:51,ru:'Ilmu Terapan',m:{IPA:[{n:'Matematika Peminatan / Tingkat Lanjut',k:'Navigasi & aerodinamika'},{n:'Fisika',k:'Aerodinamika'},{n:'Kimia',k:'Bahan bakar pesawat'},{n:'Bahasa Inggris',k:'ICAO English'}],IPS:[{n:'Matematika Wajib',k:'Navigasi'},{n:'Fisika (lintas)',k:'Aerodinamika'},{n:'Bahasa Inggris',k:'ICAO English'},{n:'Geografi',k:'Navigasi & peta'}],BAHASA:[{n:'Matematika Wajib',k:'Navigasi'},{n:'Bahasa Inggris',k:'ICAO English — wajib'},{n:'Fisika (lintas)',k:'Aerodinamika'},{n:'Geografi (lintas)',k:'Peta'}]}},
+  {kw:['militer','tentara','tni','polisi'],prodi:'Ilmu atau Sains Militer / Pertahanan',no:47,ru:'Ilmu Terapan',m:{IPA:[{n:'Sosiologi (lintas)',k:'Geopolitik'},{n:'Matematika Wajib',k:'Analisis strategis'},{n:'Fisika',k:'Balistik'},{n:'PPKn / Pendidikan Pancasila',k:'Bela negara'}],IPS:[{n:'PPKn / Pendidikan Pancasila',k:'Bela negara'},{n:'Sosiologi',k:'Konflik sosial'},{n:'Sejarah Indonesia',k:'Sejarah militer'},{n:'Matematika Wajib',k:'Logistik'}],BAHASA:[{n:'PPKn / Pendidikan Pancasila',k:'Ideologi negara'},{n:'Sejarah Indonesia',k:'Militer'},{n:'Bahasa Inggris',k:'Traktat internasional'},{n:'Sosiologi (lintas)',k:'Konflik'}]}}
+];
+
+// RIASEC MAP, MI_MAPEL, RIASEC_INTL (ringkas)
+const RMAP={
+  R:{prodi:['Teknik Mesin','Teknik Sipil','Agribisnis','Kehutanan','PJOK'],mapel:['Fisika','Matematika Wajib','Kimia','Biologi'],
+     karier:[{n:'Insinyur Teknik',bw:{R:5,I:3,C:2,S:1,A:1,E:2}},{n:'Petani Modern / Agropreneur',bw:{R:5,I:2,C:1,S:1,A:1,E:2}},{n:'Arsitek & Perancang',bw:{R:4,A:4,I:2,C:3,E:1,S:1}},{n:'Teknisi & Mekanik',bw:{R:5,I:2,C:3,S:1,A:1,E:1}},{n:'Polisi / TNI / Aparat',bw:{R:4,E:3,S:2,C:3,I:1,A:1}}]},
+  I:{prodi:['Biologi','Kimia','Fisika','Ilmu Komputer','Kedokteran'],mapel:['Biologi','Kimia','Fisika','Matematika Peminatan / Tingkat Lanjut'],
+     karier:[{n:'Peneliti / Ilmuwan',bw:{I:5,R:2,A:2,C:2,S:1,E:1}},{n:'Dokter / Tenaga Medis',bw:{I:4,S:4,R:2,C:2,A:1,E:2}},{n:'Data Scientist',bw:{I:5,C:3,R:1,A:1,S:1,E:2}},{n:'Programmer / Software Eng.',bw:{I:4,R:3,C:3,A:2,S:1,E:1}},{n:'Apoteker / Farmasis',bw:{I:4,S:3,C:3,R:2,A:1,E:1}}]},
+  A:{prodi:['Desain KV','Seni Rupa','Sastra','Arsitektur','Seni Musik'],mapel:['Seni Budaya','Bahasa Indonesia','Bahasa Inggris','Matematika Wajib'],
+     karier:[{n:'Desainer Grafis / UI-UX',bw:{A:5,I:3,R:2,C:2,S:1,E:2}},{n:'Penulis / Jurnalis / Konten',bw:{A:5,S:2,I:3,E:2,R:1,C:1}},{n:'Musisi / Komposer',bw:{A:5,I:2,E:2,S:2,R:1,C:1}},{n:'Arsitek / Desainer Interior',bw:{A:4,R:4,I:2,C:3,E:2,S:1}},{n:'Sutradara / Kreator Film',bw:{A:5,E:3,I:2,S:2,R:1,C:1}}]},
+  S:{prodi:['Psikologi','Ilmu Komunikasi','Pendidikan','Keperawatan','Sosiologi'],mapel:['Sosiologi','Bahasa Indonesia','Biologi','PPKn / Pendidikan Pancasila'],
+     karier:[{n:'Guru / Dosen / Pendidik',bw:{S:5,A:2,I:3,C:2,E:2,R:1}},{n:'Psikolog / Konselor',bw:{S:5,I:4,A:2,C:2,E:1,R:1}},{n:'Perawat / Bidan / Nakes',bw:{S:4,R:3,I:3,C:2,A:1,E:1}},{n:'Pekerja Sosial / Relawan',bw:{S:5,A:2,E:3,I:2,R:1,C:1}},{n:'Diplomat / Hub. Internasional',bw:{S:3,E:4,I:3,A:2,C:2,R:1}}]},
+  E:{prodi:['Manajemen Bisnis','Hukum','Hub. Internasional','Marketing'],mapel:['Ekonomi','Sosiologi','Matematika Wajib','PPKn / Pendidikan Pancasila'],
+     karier:[{n:'Pengusaha / Entrepreneur',bw:{E:5,R:2,A:2,I:2,S:2,C:2}},{n:'Manajer / Pemimpin',bw:{E:5,C:3,S:2,I:2,A:1,R:1}},{n:'Pengacara / Advokat',bw:{E:4,I:3,S:2,C:3,A:2,R:1}},{n:'Marketing / Brand Manager',bw:{E:4,A:3,S:3,I:2,C:2,R:1}},{n:'Politisi / Pemimpin Publik',bw:{E:5,S:3,I:2,A:2,C:1,R:1}}]},
+  C:{prodi:['Akuntansi','Administrasi Bisnis','Statistika'],mapel:['Ekonomi','Matematika Wajib','Sosiologi','Bahasa Indonesia'],
+     karier:[{n:'Akuntan / Auditor / Pajak',bw:{C:5,I:3,E:2,S:1,R:1,A:1}},{n:'Analis Keuangan / Bankir',bw:{C:4,I:4,E:3,S:1,R:1,A:1}},{n:'Statistisi / Aktuaris',bw:{C:4,I:5,R:1,S:1,A:1,E:2}},{n:'Administrator / IT Support',bw:{C:4,R:3,I:3,S:1,A:1,E:1}},{n:'Sekretaris / Manajer Adm.',bw:{C:5,S:2,E:2,I:2,A:1,R:1}}]}
+};
+const RIASEC_Q_COUNT={R:7,I:7,A:6,S:7,E:7,C:8};
+const MI_MAPEL={Linguistic:['Bahasa Indonesia','Bahasa Inggris','Sosiologi','Sejarah Indonesia'],'Logical-Mathematical':['Matematika Peminatan / Tingkat Lanjut','Fisika','Kimia','Ekonomi'],'Visual-Spatial':['Seni Budaya','Matematika Wajib','Fisika','Geografi'],Musical:['Seni Budaya','Bahasa Indonesia','Bahasa Inggris','Sosiologi'],'Bodily-Kinesthetic':['PJOK / Pendidikan Jasmani Olahraga & Kesehatan (PJOK)','Biologi','Fisika','Kimia'],Interpersonal:['Sosiologi','Bahasa Indonesia','Bahasa Inggris','Ekonomi'],Intrapersonal:['Bahasa Indonesia','Sosiologi','Sejarah Indonesia','PPKn / Pendidikan Pancasila'],Naturalistic:['Biologi','Kimia','Geografi','Fisika']};
+const RIASEC_DESC={R:"Realistis: Orang yang praktis, menyukai pekerjaan dengan tangan, alat, atau mesin.",I:"Investigatif: Orang yang analitis, ingin tahu, dan suka meneliti atau memecahkan masalah.",A:"Artistik: Orang yang kreatif, ekspresif, menyukai kegiatan seni dan tidak suka aturan kaku.",S:"Sosial: Orang yang suka berinteraksi, membantu, mengajar, atau melayani orang lain.",E:"Enterprising: Orang yang ambisius, persuasif, dan suka memimpin atau berbisnis.",C:"Konvensional: Orang yang teratur, teliti, dan menyukai struktur, data, serta administrasi."};
+const RIASEC_INTL={
+  R:{en_label:"Realistic",ciri_id:"Orang tipe Realistic unggul dalam pekerjaan mekanik atau atletik, senang bekerja dengan alat, mesin, tanaman, atau hewan.",ciri_list:["Suka bekerja dengan tangan & alat","Orang yang praktis & lugas","Senang merakit, membangun, atau memperbaiki","Lebih suka aksi nyata daripada teori","Gemar aktivitas luar ruangan"],jurusan_intl:["Agriculture / Pertanian","Computers / Ilmu Komputer","Construction / Teknik Sipil","Mechanic & Machinist / Teknik Mesin","Engineering / Teknik","Food and Hospitality / Kuliner"],pathways:["Natural Resources","Health Services","Industrial and Engineering Technology"]},
+  I:{en_label:"Investigative",ciri_id:"Orang tipe Investigative senang mengamati, belajar, menganalisis, dan memecahkan masalah secara mendalam.",ciri_list:["Analitis & berpikir kritis","Suka penelitian & eksperimen","Ingin tahu bagaimana sesuatu bekerja","Gemar matematika & sains","Suka memecahkan teka-teki logika"],jurusan_intl:["Marine Biology / Biologi Kelautan","Chemistry / Kimia","Medicine & Surgery / Kedokteran","Psychology / Psikologi","Engineering / Teknik"],pathways:["Health Services","Business","Industrial and Engineering Technology"]},
+  A:{en_label:"Artistic",ciri_id:"Orang tipe Artistic senang bekerja di situasi tidak terstruktur menggunakan kreativitas. Orisinal dan suka fleksibilitas.",ciri_list:["Kreatif & imajinatif","Ekspresif melalui seni, musik, atau tulisan","Tidak suka aturan kaku","Berpikir orisinal","Peka terhadap estetika & keindahan"],jurusan_intl:["Communications / Ilmu Komunikasi","Fine and Performing Arts / Seni","Photography / Fotografi","Interior Design / Desain Interior","Architecture / Arsitektur"],pathways:["Public and Human Services","Arts and Communication"]},
+  S:{en_label:"Social",ciri_id:"Orang tipe Social senang bekerja dengan orang lain. Mereka suka membantu, berempati, dan melayani.",ciri_list:["Suka membantu & bekerja dengan orang","Mudah berempati","Suka mengajar atau membimbing","Pandai berkomunikasi","Peduli kesejahteraan orang lain"],jurusan_intl:["Counseling / Konseling","Nursing / Keperawatan","Physical Therapy / Fisioterapi","Public Relations / Humas","Education / Pendidikan"],pathways:["Health Services","Public and Human Services"]},
+  E:{en_label:"Enterprising",ciri_id:"Orang tipe Enterprising senang mempengaruhi orang lain, memimpin, dan tampil. Ambisius dan percaya diri.",ciri_list:["Ambisius & berorientasi pada tujuan","Percaya diri & suka tampil","Pandai meyakinkan orang","Suka memimpin & bisnis","Suka risiko terukur"],jurusan_intl:["Marketing & Sales / Pemasaran","Law / Hukum","Political Science / Ilmu Politik","International Trade / Perdagangan","Banking & Finance / Perbankan"],pathways:["Business","Public and Human Services","Arts and Communication"]},
+  C:{en_label:"Conventional",ciri_id:"Orang tipe Conventional sangat detail oriented, terorganisir, dan suka data. Lebih suka lingkungan terstruktur.",ciri_list:["Sangat teliti & detail","Terorganisir & tertib","Senang bekerja dengan angka & data","Efisien dalam administrasi","Stabil & dapat diandalkan"],jurusan_intl:["Accounting / Akuntansi","Administration / Administrasi","Medical Records / Rekam Medis","Banking / Perbankan","Data Processing / Pengolahan Data"],pathways:["Health Services","Business","Industrial and Engineering Technology"]}
+};
+const CASEL_RECS={"Self-Awareness":["Mencatat perasaan di jurnal harian","Berlatih mindfulness untuk mengenali emosi","Refleksi tentang kekuatan & kelemahan diri","Minta umpan balik dari orang terpercaya"],"Self-Management":["Buat daftar tugas harian/mingguan","Teknik relaksasi: pernapasan dalam saat stres","Tetapkan tujuan kecil yang bisa dicapai","Cari cara sehat mengatasi frustrasi"],"Social Awareness":["Dengarkan orang lain dengan aktif","Pelajari budaya berbeda untuk meningkatkan empati","Ikut kegiatan komunitas","Pahami perspektif orang lain walaupun berbeda"],"Relationship Skills":["Latih komunikasi asertif","Cari kesempatan kerja tim","Belajar menyelesaikan konflik tanpa agresi","Bangun hubungan positif"],"Responsible Decision-Making":["Pikir konsekuensi jangka panjang","Pertimbangkan dampak pada orang lain","Identifikasi berbagai pilihan sebelum memutuskan","Belajar dari kesalahan lalu"]};
+
+// ════════════════════════════════════════════
+// 127 QUESTIONS
+// ════════════════════════════════════════════
+const QS={
+  riasec:[
+    {t:"Saya suka bekerja dengan kendaraan atau mesin.",tp:"R"},
+    {t:"Saya suka membangun atau merakit sesuatu.",tp:"R"},
+    {t:"Saya suka merawat atau memelihara hewan.",tp:"R"},
+    {t:"Saya senang menyusun atau memasang komponen secara langsung.",tp:"R"},
+    {t:"Saya suka memasak atau menyiapkan makanan.",tp:"R"},
+    {t:"Saya adalah orang yang praktis dan realistis.",tp:"R"},
+    {t:"Saya senang bekerja di luar ruangan.",tp:"R"},
+    {t:"Saya suka mengerjakan teka-teki atau soal logika.",tp:"I"},
+    {t:"Saya suka melakukan eksperimen atau percobaan.",tp:"I"},
+    {t:"Saya tertarik pada ilmu pengetahuan dan sains.",tp:"I"},
+    {t:"Saya senang mencari tahu bagaimana sesuatu bisa bekerja.",tp:"I"},
+    {t:"Saya suka menganalisis masalah atau situasi secara mendalam.",tp:"I"},
+    {t:"Saya pandai berhitung dan mengerjakan soal matematika.",tp:"I"},
+    {t:"Saya suka bekerja dengan angka atau grafik data.",tp:"I"},
+    {t:"Saya suka membaca atau belajar tentang seni dan musik.",tp:"A"},
+    {t:"Saya senang menulis kreatif seperti cerita atau puisi.",tp:"A"},
+    {t:"Saya adalah orang yang kreatif.",tp:"A"},
+    {t:"Saya suka memainkan alat musik atau bernyanyi.",tp:"A"},
+    {t:"Saya senang berakting atau tampil di atas panggung.",tp:"A"},
+    {t:"Saya suka menggambar atau membuat ilustrasi.",tp:"A"},
+    {t:"Saya suka bekerja bersama orang lain dalam tim.",tp:"S"},
+    {t:"Saya suka mengajar atau melatih orang lain.",tp:"S"},
+    {t:"Saya suka membantu orang lain memecahkan masalah mereka.",tp:"S"},
+    {t:"Saya tertarik untuk menyembuhkan atau menolong orang sakit.",tp:"S"},
+    {t:"Saya tertarik mempelajari berbagai budaya yang berbeda.",tp:"S"},
+    {t:"Saya suka berdiskusi tentang berbagai isu atau topik.",tp:"S"},
+    {t:"Saya senang membantu orang lain.",tp:"S"},
+    {t:"Saya adalah orang yang ambisius dan selalu menetapkan target.",tp:"E"},
+    {t:"Saya suka mempengaruhi atau meyakinkan orang lain.",tp:"E"},
+    {t:"Saya suka menjual sesuatu atau kegiatan berdagang.",tp:"E"},
+    {t:"Saya cepat mengambil tanggung jawab atau peran baru.",tp:"E"},
+    {t:"Saya ingin memulai usaha atau bisnis sendiri suatu hari nanti.",tp:"E"},
+    {t:"Saya suka memimpin kelompok atau tim.",tp:"E"},
+    {t:"Saya suka memberikan pidato atau presentasi di depan umum.",tp:"E"},
+    {t:"Saya bisa bekerja dengan baik secara mandiri dan disiplin.",tp:"C"},
+    {t:"Saya suka mengorganisir berkas, meja kerja, atau ruangan.",tp:"C"},
+    {t:"Saya lebih suka bekerja dengan instruksi yang jelas dan terstruktur.",tp:"C"},
+    {t:"Saya tidak keberatan bekerja 8 jam sehari di kantor.",tp:"C"},
+    {t:"Saya sangat teliti dan selalu memperhatikan detail.",tp:"C"},
+    {t:"Saya suka kegiatan pengarsipan, pengetikan, atau administrasi.",tp:"C"},
+    {t:"Saya pandai mencatat dan mendokumentasikan pekerjaan saya.",tp:"C"},
+    {t:"Saya tertarik bekerja di lingkungan kantor yang teratur.",tp:"C"}
+  ],
+  mi:[
+    {t:"Saya suka membaca dan menulis cerita.",tp:"Linguistic"},{t:"Saya mudah menangkap pelajaran berbasis teks.",tp:"Linguistic"},{t:"Saya suka berbicara di depan umum atau menulis pidato.",tp:"Linguistic"},{t:"Saya menikmati bermain kata-kata atau teka-teki silang.",tp:"Linguistic"},{t:"Saya sering menggunakan metafora atau analogi untuk menjelaskan ide.",tp:"Linguistic"},
+    {t:"Saya menikmati memecahkan soal matematika atau logika.",tp:"Logical-Mathematical"},{t:"Saya suka berpikir sistematis dan membuat rencana.",tp:"Logical-Mathematical"},{t:"Saya tertarik pada game strategi atau perhitungan.",tp:"Logical-Mathematical"},{t:"Saya suka mencari pola atau hubungan sebab-akibat.",tp:"Logical-Mathematical"},{t:"Saya mudah memahami konsep-konsep abstrak atau teoritis.",tp:"Logical-Mathematical"},
+    {t:"Saya mudah memahami peta, grafik, atau diagram.",tp:"Visual-Spatial"},{t:"Saya suka menggambar, mendesain, atau visualisasi ide.",tp:"Visual-Spatial"},{t:"Saya bisa membayangkan ruang atau bentuk dalam pikiran.",tp:"Visual-Spatial"},{t:"Saya suka mendekorasi atau mengatur ruang agar terlihat menarik.",tp:"Visual-Spatial"},{t:"Saya memiliki ingatan visual yang kuat untuk wajah atau tempat.",tp:"Visual-Spatial"},
+    {t:"Saya bisa mengenali dan menciptakan irama.",tp:"Musical"},{t:"Saya senang bernyanyi atau memainkan alat musik.",tp:"Musical"},{t:"Musik membantu saya fokus atau menenangkan pikiran.",tp:"Musical"},{t:"Saya sering bersenandung atau mengetuk-ngetukkan jari mengikuti irama.",tp:"Musical"},{t:"Saya peka terhadap nada, timbre, dan melodi dalam suara.",tp:"Musical"},
+    {t:"Saya belajar lebih mudah saat praktek langsung.",tp:"Bodily-Kinesthetic"},{t:"Saya aktif secara fisik dan menyukai olahraga.",tp:"Bodily-Kinesthetic"},{t:"Saya bisa menirukan gerakan atau ekspresi orang lain.",tp:"Bodily-Kinesthetic"},{t:"Saya merasa lebih nyaman jika saya bisa bergerak saat belajar.",tp:"Bodily-Kinesthetic"},{t:"Saya memiliki koordinasi tangan-mata yang baik.",tp:"Bodily-Kinesthetic"},
+    {t:"Saya cepat memahami emosi teman dan bisa memberi dukungan.",tp:"Interpersonal"},{t:"Saya suka kerja tim dan diskusi kelompok.",tp:"Interpersonal"},{t:"Saya percaya diri berbicara dengan orang baru.",tp:"Interpersonal"},{t:"Saya sering menjadi mediator saat ada konflik antar teman.",tp:"Interpersonal"},{t:"Saya menikmati kegiatan sosial dan bertemu banyak orang.",tp:"Interpersonal"},
+    {t:"Saya suka merenung dan memahami diri saya sendiri.",tp:"Intrapersonal"},{t:"Saya tahu apa yang tujuan saya dalam hidup.",tp:"Intrapersonal"},{t:"Saya sering menulis jurnal atau refleksi pribadi.",tp:"Intrapersonal"},{t:"Saya suka menghabiskan waktu sendiri untuk berpikir.",tp:"Intrapersonal"},{t:"Saya memiliki pemahaman yang jelas tentang nilai-nilai pribadi saya.",tp:"Intrapersonal"},
+    {t:"Saya tertarik pada alam, tumbuhan, dan hewan.",tp:"Naturalistic"},{t:"Saya peduli terhadap lingkungan hidup.",tp:"Naturalistic"},{t:"Saya senang berkebun, hiking, atau observasi alam.",tp:"Naturalistic"},{t:"Saya suka mengklasifikasikan atau mengidentifikasi jenis makhluk hidup.",tp:"Naturalistic"},{t:"Saya merasa tenang dan nyaman saat berada di lingkungan alami.",tp:"Naturalistic"}
+  ],
+  vark:[
+    {t:"Saya suka belajar lewat diagram, peta, atau grafik.",tp:"Visual"},{t:"Saya cepat paham jika ada ilustrasi daripada teks panjang.",tp:"Visual"},{t:"Warna dan bentuk membantu saya memahami pelajaran.",tp:"Visual"},{t:"Saya lebih suka menonton video tutorial daripada membaca instruksi.",tp:"Visual"},{t:"Saya menggunakan warna atau spidol untuk menandai info penting.",tp:"Visual"},
+    {t:"Saya mudah paham jika dijelaskan secara lisan.",tp:"Auditory"},{t:"Saya suka diskusi kelompok dan mendengar presentasi.",tp:"Auditory"},{t:"Saya suka membaca keras atau membuat rekaman suara belajar.",tp:"Auditory"},{t:"Saya sering mengulang informasi dengan suara keras.",tp:"Auditory"},{t:"Saya belajar paling baik melalui ceramah atau podcast.",tp:"Auditory"},
+    {t:"Saya suka membaca dan membuat catatan.",tp:"Reading/Writing"},{t:"Saya belajar lewat membaca buku dan rangkuman.",tp:"Reading/Writing"},{t:"Saya sering membuat daftar atau tabel untuk mengingat.",tp:"Reading/Writing"},{t:"Saya merasa lebih baik menulis ulang catatan dengan kata-kata sendiri.",tp:"Reading/Writing"},{t:"Saya suka membuat esai atau laporan.",tp:"Reading/Writing"},
+    {t:"Saya suka praktik, eksperimen, dan simulasi.",tp:"Kinesthetic"},{t:"Saya belajar dengan mencoba langsung.",tp:"Kinesthetic"},{t:"Saya senang field trip, proyek, dan tugas praktik.",tp:"Kinesthetic"},{t:"Saya membutuhkan pengalaman langsung untuk memahami konsep.",tp:"Kinesthetic"},{t:"Saya belajar lebih baik dengan role-playing atau studi kasus.",tp:"Kinesthetic"}
+  ],
+  casel:[
+    {t:"Saya bisa mengenali emosi saya saat sedang marah, senang, atau sedih.",tp:"Self-Awareness"},{t:"Saya tahu apa yang menjadi kekuatan dan kelemahan saya.",tp:"Self-Awareness"},{t:"Saya tahu apa yang membuat saya termotivasi.",tp:"Self-Awareness"},{t:"Saya bisa mengidentifikasi bagaimana perasaan saya memengaruhi perilaku saya.",tp:"Self-Awareness"},{t:"Saya memiliki pandangan yang realistis tentang kemampuan saya.",tp:"Self-Awareness"},
+    {t:"Saya bisa tetap tenang saat menghadapi masalah.",tp:"Self-Management"},{t:"Saya bisa mengatur waktu dan menyelesaikan tugas tepat waktu.",tp:"Self-Management"},{t:"Saya bisa menahan diri untuk tidak melakukan hal yang merugikan.",tp:"Self-Management"},{t:"Saya mampu mengelola stres dan kecemasan dengan efektif.",tp:"Self-Management"},{t:"Saya dapat menetapkan tujuan pribadi dan bekerja untuk mencapainya.",tp:"Self-Management"},
+    {t:"Saya peduli dengan perasaan orang lain.",tp:"Social Awareness"},{t:"Saya bisa menerima orang yang berbeda latar belakangnya.",tp:"Social Awareness"},{t:"Saya mau membantu jika melihat orang lain kesulitan.",tp:"Social Awareness"},{t:"Saya bisa memahami perspektif orang lain, bahkan jika berbeda.",tp:"Social Awareness"},{t:"Saya peka terhadap dinamika sosial di sekitar saya.",tp:"Social Awareness"},
+    {t:"Saya bisa bekerja sama dengan baik dalam tim.",tp:"Relationship Skills"},{t:"Saya bisa menyelesaikan konflik dengan teman secara damai.",tp:"Relationship Skills"},{t:"Saya merasa nyaman meminta bantuan orang lain saat butuh.",tp:"Relationship Skills"},{t:"Saya pandai membangun dan menjaga persahabatan yang sehat.",tp:"Relationship Skills"},{t:"Saya bisa berkomunikasi dengan efektif dan mendengarkan orang lain.",tp:"Relationship Skills"},
+    {t:"Saya berpikir dulu sebelum mengambil tindakan.",tp:"Responsible Decision-Making"},{t:"Saya mempertimbangkan dampak keputusan saya pada orang lain.",tp:"Responsible Decision-Making"},{t:"Saya bertanggung jawab atas pilihan saya sendiri.",tp:"Responsible Decision-Making"},{t:"Saya bisa mengidentifikasi berbagai solusi untuk suatu masalah.",tp:"Responsible Decision-Making"},{t:"Saya mampu membuat keputusan yang etis dan bertanggung jawab.",tp:"Responsible Decision-Making"}
+  ]
+};
+const LBL={riasec:["1 (Tidak Suka)","2","3","4","5 (Sangat Suka)"],mi:["1 (Tidak Setuju)","2","3","4","5 (Sangat Setuju)"],vark:["1 (Tidak Cocok)","2","3","4","5 (Sangat Cocok)"],casel:["1 (Tidak Pernah)","2","3","4","5 (Selalu)"]};
+
+// ════════════════════════════════════════════
+// RENDER MAPEL CHECKBOX
+// ════════════════════════════════════════════
+function renderMapel(){
+  const cont=document.getElementById('mapel-container');
+  let html='';
+  for(const[cat,items]of Object.entries(MAPEL_SMA)){
+    html+=`<div class="mpcat"><div class="mpcat-title">${cat}</div><div class="mpgrid">`;
+    items.forEach(m=>{
+      const id='mp_'+m.replace(/\W/g,'_');
+      html+=`<label class="mpcb" id="lbl_${id}" onclick="toggleMapel('${id}',this)">
+        <input type="checkbox" id="${id}" value="${m}">
+        <div class="mpcb-icon">&#128218;</div>
+        <span class="mpcb-txt">${m}</span>
+      </label>`;
+    });
+    html+='</div></div>';
+  }
+  cont.innerHTML=html;
+}
+function toggleMapel(id,lbl){
+  const cb=document.getElementById(id);
+  cb.checked=!cb.checked;
+  lbl.classList.toggle('checked',cb.checked);
+  const cnt=document.querySelectorAll('.mpcb input:checked').length;
+  document.getElementById('mpsel-count').textContent=cnt;
+}
+function getSelectedMapel(){
+  return [...document.querySelectorAll('.mpcb input:checked')].map(cb=>cb.value);
+}
+
+// ════════════════════════════════════════════
+// QUESTIONS RENDER
+// ════════════════════════════════════════════
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+function mkQ(q,idx,grp){
+  const lb=LBL[grp];
+  let h=`<div class="question"><p>${q.t}</p><div class="opts">`;
+  for(let i=1;i<=5;i++) h+=`<label><input type="radio" name="q_${grp}_${idx}" value="${i}" data-type="${q.tp}"><span>${lb[i-1]}</span></label>`;
+  return h+'</div></div>';
+}
+function renderQ(){
+  const all=[...QS.riasec.map((q,i)=>({...q,idx:i,grp:'riasec'})),...QS.mi.map((q,i)=>({...q,idx:i,grp:'mi'})),...QS.vark.map((q,i)=>({...q,idx:i,grp:'vark'})),...QS.casel.map((q,i)=>({...q,idx:i,grp:'casel'}))];
+  shuf(all);
+  document.getElementById('qcont').innerHTML=all.map(q=>mkQ(q,q.idx,q.grp)).join('');
+}
+function topN(sc,n=2){return Object.entries(sc).sort(([,a],[,b])=>b-a).slice(0,n).map(([k])=>k);}
+
+// ════════════════════════════════════════════
+// SUPABASE SAVE
+// ════════════════════════════════════════════
+// URL Apps Script — ganti setelah deploy
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzjwDT-xRrMwwhXNM-w0pI6ahodtmgI73R4d5KG1rl_X5cJjEgPkErMjs6GjVi2-2Ez/exec';
+
+async function saveToSupabase(rec){
+  try{
+    await fetch(SCRIPT_URL,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify(rec)
+    });
+    return {ok:true};
+  }catch(e){return{ok:false,msg:e.message};}
+}
+
+function showToast(msg,dur=3500){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+// ════════════════════════════════════════════
+// SNBP MATCHER
+// ════════════════════════════════════════════
+function matchDream(dream){
+  if(!dream)return null;
+  const d=dream.toLowerCase();
+  let best=null,bs=0;
+  for(const e of SNBP){for(const kw of e.kw){if(d.includes(kw)||kw.includes(d)){const s=kw.length;if(s>bs){bs=s;best=e;}}}}
+  if(!best){const words=d.split(/\s+/);for(const e of SNBP){for(const kw of e.kw){const kww=kw.split(/\s+/);for(const w of words){if(w.length>=4&&kww.some(k=>k.includes(w)||w.includes(k))){best=e;break;}}if(best)break;}if(best)break;}}
+  return best;
+}
+function get4(e,j){if(!e||!e.m)return[];return e.m[j]||e.m['IPA']||[];}
+
+// ════════════════════════════════════════════
+// ANALISIS KESESUAIAN MAPEL FAVORIT + CITA-CITA
+// ════════════════════════════════════════════
+function analyzeMapelMatch(selectedMapel, snbpMatch, jurusan, rTop, mTop){
+  if(!selectedMapel.length) return null;
+  
+  // Mapel yang direkomendasikan untuk cita-cita
+  const snbpMapel = snbpMatch ? get4(snbpMatch,jurusan).map(m=>m.n) : [];
+  // Mapel dari RIASEC & MI
+  const rMapel = RMAP[rTop[0]]?.mapel||[];
+  const mMapel = MI_MAPEL[mTop[0]]||[];
+  const rekMapel = [...new Set([...snbpMapel,...rMapel,...mMapel])];
+  
+  // Normalisasi untuk matching
+  const norm = s => s.toLowerCase().replace(/\(.*?\)/g,'').trim().replace(/\s+/g,' ');
+  
+  // Analisis tiap mapel yang dipilih siswa
+  const analysis = selectedMapel.map(m=>{
+    const mn = norm(m);
+    // Cek apakah ada di rekomendasi SNBP
+    const inSnbp = snbpMapel.some(r=>norm(r).includes(mn)||mn.includes(norm(r).split(' ')[0]));
+    // Cek apakah ada di rekomendasi RIASEC/MI
+    const inRek  = rekMapel.some(r=>norm(r).includes(mn)||mn.includes(norm(r).split(' ')[0]));
+    // Tipe RIASEC dari mapel
+    const riasecTipe = MAPEL_RIASEC[m] || '';
+    
+    let status,note;
+    if(inSnbp){
+      status='ok';note='✅ Sesuai dengan mapel pendukung SNBP cita-citamu';
+    } else if(inRek){
+      status='ok';note='✅ Sesuai dengan profil minat & bakat (RIASEC/MI)';
+    } else if(riasecTipe && rTop.some(t=>riasecTipe.includes(t))){
+      status='warn';note='🟡 Relevan dengan tipe minat dominanmu ('+riasecTipe+')';
+    } else {
+      status='no';note='⚪ Mapel ini kurang linier dengan cita-citamu — pertimbangkan fokus di mapel prioritas';
+    }
+    return {m, status, note, inSnbp};
+  });
+  
+  // Mapel penting yang belum dipilih
+  const missing = snbpMapel.filter(r=>{
+    const rn=norm(r);
+    return !selectedMapel.some(s=>norm(s).includes(rn.split(' ')[0])||rn.includes(norm(s).split(' ')[0]));
+  });
+  
+  // Hitung skor kesesuaian
+  const matchCount = analysis.filter(a=>a.status==='ok').length;
+  const matchPct = Math.round((matchCount/Math.max(snbpMapel.length,1))*100);
+  
+  return {analysis, missing, matchPct, snbpMapel};
+}
+
+// % KECOCOKAN KARIER
+function calcMatch(rsc,rtop){
+  const norm={};
+  for(const k in rsc){const mx=(RIASEC_Q_COUNT[k]||7)*5;norm[k]=rsc[k]/mx*5;}
+  const seen=new Set(),all=[];
+  for(const tp of rtop.slice(0,2)){for(const k of(RMAP[tp]?.karier||[])){if(!seen.has(k.n)){seen.add(k.n);all.push(k);}}}
+  return all.map(k=>{
+    const bwT=Object.values(k.bw).reduce((a,b)=>a+b,0);let sc=0;
+    for(const[tp,bw]of Object.entries(k.bw))sc+=(norm[tp]||0)*bw;
+    const pct=Math.min(Math.round((sc/(5*bwT))*100),99);
+    const rL={R:'Praktikal',I:'Analitis',A:'Kreatif',S:'Sosial',E:'Kepemimpinan',C:'Terorganisir'};
+    return{n:k.n,pct,alasan:`Profil ${rtop.slice(0,2).map(t=>rL[t]||t).join(' & ')} kamu mendukung karier ini`};
+  }).sort((a,b)=>b.pct-a.pct).slice(0,5);
+}
+
+// ════════════════════════════════════════════
+// MAIN CALCULATE
+// ════════════════════════════════════════════
+async function calc(){
+  const name=document.getElementById('sname').value.trim();
+  const kelas=document.getElementById('skelas').value.trim();
+  const jurusan=document.getElementById('smaj').value;
+  const dream=document.getElementById('sdream').value.trim();
+  if(!name){alert('Harap isi Nama Lengkap.');document.getElementById('sname').focus();return;}
+  if(!dream){alert('Harap isi Cita-cita / Karier Impian.');document.getElementById('sdream').focus();return;}
+  const qn=new Set([...document.querySelectorAll('#qcont input[type=radio]')].map(i=>i.name));
+  let ua=0;qn.forEach(n=>{if(!document.querySelector(`input[name="${n}"]:checked`))ua++;});
+  if(ua>0){alert(`Masih ada ${ua} pertanyaan belum dijawab.`);return;}
+  
+  const selectedMapel=getSelectedMapel();
+
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span> Menyimpan & Menganalisis...';
+
+  const sc={riasec:{R:0,I:0,A:0,S:0,E:0,C:0},mi:{Linguistic:0,'Logical-Mathematical':0,'Visual-Spatial':0,Musical:0,'Bodily-Kinesthetic':0,Interpersonal:0,Intrapersonal:0,Naturalistic:0},vark:{Visual:0,Auditory:0,'Reading/Writing':0,Kinesthetic:0},casel:{'Self-Awareness':0,'Self-Management':0,'Social Awareness':0,'Relationship Skills':0,'Responsible Decision-Making':0}};
+  document.querySelectorAll('#qcont input[type=radio]:checked').forEach(inp=>{const grp=inp.name.split('_')[1];const tp=inp.dataset.type;if(sc[grp]&&sc[grp][tp]!==undefined)sc[grp][tp]+=parseInt(inp.value);});
+
+  const rTop=topN(sc.riasec,3);const mTop=topN(sc.mi,2);const vTop=topN(sc.vark,1);
+  const rTot=Object.values(sc.riasec).reduce((a,b)=>a+b,0)||1;
+  const rPct={};for(const k in sc.riasec)rPct[k]=((sc.riasec[k]/rTot)*100).toFixed(1);
+  const cPct={};for(const k in sc.casel){const cnt=QS.casel.filter(q=>q.tp===k).length;cPct[k]=((sc.casel[k]/(cnt*5))*100).toFixed(1);}
+  let cStatus='Baik',lowC=[];
+  for(const k in cPct){const v=parseFloat(cPct[k]);if(v<60){cStatus='Perlu Perhatian Khusus';lowC.push(k);}else if(v<80&&cStatus==='Baik')cStatus='Cukup Baik';}
+  const snbpM=matchDream(dream);const m4=snbpM?get4(snbpM,jurusan):[];
+  const rMapel=RMAP[rTop[0]]?.mapel||[];const mMapel=MI_MAPEL[mTop[0]]||[];
+  const comb=[...new Set([...rMapel,...mMapel])].slice(0,4);
+  const rProdi=RMAP[rTop[0]]?.prodi||[];const rP2=RMAP[rTop[1]]?.prodi||[];
+  const allProdi=[...new Set([...(snbpM?[snbpM.prodi]:[]),...rProdi.slice(0,3),...rP2.slice(0,2)])].slice(0,5);
+  const matches=calcMatch(sc.riasec,rTop);
+  const mapelAnalysis=analyzeMapelMatch(selectedMapel,snbpM,jurusan,rTop,mTop);
+
+  const ts=new Date().toLocaleString('id-ID');
+  const rec={
+    waktu:ts,nama:name,kelas,jurusan,cita_cita:dream,
+    riasec_dominan:rTop.join(', '),kecerdasan_mi:mTop.join(', '),gaya_belajar:vTop[0],status_casel:cStatus,
+    snbp_prodi:snbpM?snbpM.prodi:'Tidak terdeteksi',
+    snbp_mapel:m4.map(x=>x.n).join(', '),
+    mapel_rek_minat:comb.join(', '),prodi_rekomendasi:allProdi.join(', '),
+    karier_top:matches.slice(0,3).map(c=>`${c.n}(${c.pct}%)`).join(', '),
+    mapel_favorit:selectedMapel.join(', '),
+    mapel_sesuai:mapelAnalysis?mapelAnalysis.analysis.filter(a=>a.status==='ok').map(a=>a.m).join(', '):'',
+    kesesuaian_pct:mapelAnalysis?mapelAnalysis.matchPct+'%':'N/A',
+    riasec_R:sc.riasec.R,riasec_I:sc.riasec.I,riasec_A:sc.riasec.A,
+    riasec_S:sc.riasec.S,riasec_E:sc.riasec.E,riasec_C:sc.riasec.C
+  };
+
+  const saveResult=await saveToSupabase(rec);
+  btn.disabled=false;btn.innerHTML='&#128269; Lihat Hasil Asesmen &amp; Rekomendasi SNBP';
+
+  if(saveResult.ok){
+    showToast('✅ Data berhasil disimpan ke server!');
+  } else {
+    showToast('⚠️ '+saveResult.msg,4000);
+  }
+
+  renderRes({name,kelas,jurusan,dream,rTop,mTop,vTop,cStatus,rPct,cPct,lowC,snbpM,m4,comb,allProdi,matches,mapelAnalysis,selectedMapel});
+  document.getElementById('results').scrollIntoView({behavior:'smooth'});
+}
+
+// ════════════════════════════════════════════
+// RENDER RESULTS
+// ════════════════════════════════════════════
+function renderRes(d){
+  const el=document.getElementById('results');el.style.display='block';
+  const rL={R:'Realistic (Praktikal)',I:'Investigative (Analitis)',A:'Artistic (Kreatif)',S:'Social (Sosial)',E:'Enterprising (Kepemimpinan)',C:'Conventional (Terorganisir)'};
+  const mL={Linguistic:'Linguistik','Logical-Mathematical':'Logis-Matematis','Visual-Spatial':'Visual-Spasial',Musical:'Musikal','Bodily-Kinesthetic':'Kinestetik',Interpersonal:'Interpersonal',Intrapersonal:'Intrapersonal',Naturalistic:'Naturalis'};
+  const jL={IPA:'IPA / Saintek',IPS:'IPS / Soshum',BAHASA:'Bahasa / Humaniora'};
+  const barC=['#0056b3','#28a745','#fd7e14','#6f42c1','#dc3545','#20c997'];
+  const pctC=['#28a745','#3a7bd5','#fd7e14','#6f42c1','#dc3545'];
+  const icC={R:'#e63946',I:'#457b9d',A:'#e9c46a',S:'#2a9d8f',E:'#f4a261',C:'#6d6875'};
+
+  // BLOK 1 — 4 MAPEL SNBP
+  let snbpBlok='';
+  if(d.snbpM&&d.m4.length){
+    const g=d.m4.map((m,i)=>`<div class="m4i"><div class="m4n">${i+1}</div><div><div class="m4nm">${m.n}</div><div class="m4k">${m.k}</div></div></div>`).join('');
+    snbpBlok=`<div class="sc b"><h4>&#127919; 4 Mapel Pendukung SNBP &mdash; Cita-cita: "${d.dream}"</h4>
+      <p style="font-size:.8rem;color:var(--P);font-weight:600;margin-bottom:10px;">Prodi: <strong>${d.snbpM.prodi}</strong> &middot; No.${d.snbpM.no} &middot; ${d.snbpM.ru} &middot; ${jL[d.jurusan]}</p>
+      <div class="m4g">${g}</div>
+      <p style="font-size:.72rem;color:var(--M);margin-top:10px;padding-top:9px;border-top:1px dashed #b3ccf0;">&#9888;&#65039; <strong>Tips SNBP:</strong> Tingkatkan nilai rapor pada 4 mapel di atas!</p>
+    </div>`;
+  } else {
+    snbpBlok=`<div class="sc o"><h4>&#9888;&#65039; Cita-cita Belum Terdeteksi</h4><p style="font-size:.83rem;color:#7a4800;">Ketik lebih spesifik, misal: "Dokter", "Programmer", "Arsitek". (40+ karier tersedia)</p></div>`;
+  }
+
+  // BLOK 2 — ANALISIS KESESUAIAN MAPEL FAVORIT
+  let mapelMatchBlok='';
+  if(d.mapelAnalysis && d.selectedMapel.length>0){
+    const ma=d.mapelAnalysis;
+    const grid=ma.analysis.map(a=>`
+      <div class="ma-item ${a.status}">
+        <div class="ma-mapel">${a.m}</div>
+        <span class="ma-status ${a.status}">${a.status==='ok'?'✅ Sesuai':a.status==='warn'?'🟡 Relevan':'⚪ Kurang Linier'}</span>
+        <div class="ma-note">${a.note}</div>
+      </div>`).join('');
+    const missingHtml=ma.missing.length?`<div style="margin-top:12px;padding:10px 12px;background:rgba(255,255,255,.7);border-radius:9px;border-left:3px solid var(--O);">
+      <strong style="font-size:.79rem;color:#a04800;">&#128161; Mapel Pendukung SNBP yang Belum Kamu Pilih:</strong>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">${ma.missing.map(m=>`<span style="background:var(--O);color:#fff;padding:3px 10px;border-radius:14px;font-size:.75rem;font-weight:700;">${m}</span>`).join('')}</div>
+      <p style="font-size:.72rem;color:#7a4800;margin-top:6px;">Pertimbangkan untuk lebih fokus pada mapel-mapel di atas untuk meningkatkan peluang SNBP.</p>
+    </div>`:'<div style="margin-top:8px;padding:8px 12px;background:rgba(255,255,255,.7);border-radius:8px;font-size:.79rem;color:#1a6e30;font-weight:600;">&#127881; Kamu sudah memilih semua mapel pendukung SNBP untuk cita-citamu!</div>';
+    mapelMatchBlok=`<div class="sc teal">
+      <h4>&#128202; Analisis Kesesuaian Mapel Favorit &amp; Cita-cita</h4>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+        <div style="background:rgba(255,255,255,.8);border-radius:10px;padding:10px 16px;text-align:center;">
+          <div style="font-size:1.6rem;font-weight:900;color:#00695c;">${ma.matchPct}%</div>
+          <div style="font-size:.72rem;color:var(--M);font-weight:600;">Tingkat Kesesuaian</div>
+        </div>
+        <div style="font-size:.81rem;color:#00695c;">
+          <strong>${ma.analysis.filter(a=>a.status==='ok').length}</strong> dari <strong>${d.selectedMapel.length}</strong> mapel pilihanmu sesuai dengan cita-cita & profil minat-bakat
+        </div>
+      </div>
+      <div class="ma-grid">${grid}</div>
+      ${missingHtml}
+    </div>`;
+  } else if(d.selectedMapel.length===0){
+    mapelMatchBlok=`<div class="sc teal"><h4>&#128202; Analisis Kesesuaian Mapel</h4><p style="font-size:.83rem;color:#00695c;">Kamu belum memilih mapel favorit. Kembali ke atas dan centang mata pelajaran yang kamu sukai untuk mendapatkan analisis ini.</p></div>`;
+  }
+
+  // BLOK 3 — RIASEC PROFILE
+  const rSorted=Object.entries(d.rPct).sort(([,a],[,b])=>b-a);
+  const rBars=rSorted.map(([k,v],i)=>`<div class="rbar-row"><span class="rbar-lbl">${rL[k]||k}</span><div class="rbar-bg"><div class="rbar-fill" style="width:${v}%;background:${barC[i]||'#888'};">${v}%</div></div><span class="rbar-pct">${v}%</span></div>`).join('');
+  const ic3=d.rTop.slice(0,3);
+  const icBadges=ic3.map(k=>`<div class="icode-badge" style="background:${icC[k]||'#555'}">${k}</div>`).join('');
+  const riCards=ic3.slice(0,2).map(k=>{
+    const ri=RIASEC_INTL[k];if(!ri)return'';const col=icC[k]||'#555';
+    const ciriItems=ri.ciri_list.map(x=>`<div class="ri-ciri-item">${x}</div>`).join('');
+    const jTags=ri.jurusan_intl.map(x=>`<span class="ri-tag">${x}</span>`).join('');
+    const pTags=ri.pathways.map(x=>`<span class="ri-tag pw">${x}</span>`).join('');
+    return`<div class="ri-card" style="border-left-color:${col}"><div class="ri-card-head"><div class="ri-badge" style="background:${col}">${k}</div><div><div class="ri-title">${rL[k]||k}</div><div class="ri-en">${ri.en_label} &mdash; Tipe Dominanmu</div></div></div>
+    <p class="ri-desc">${ri.ciri_id}</p>
+    <div class="ri-stitle">&#10024; Ciri-ciri</div><div class="ri-ciri">${ciriItems}</div>
+    <div class="ri-divider"></div>
+    <div class="ri-stitle">&#127891; Jurusan Internasional</div><div class="ri-tags">${jTags}</div>
+    <div class="ri-stitle">&#128203; Career Pathways</div><div class="ri-tags">${pTags}</div></div>`;
+  }).join('');
+  const riasecBlok=`<div class="sc b"><h4>&#127959; Profil Minat RIASEC &amp; Penjelasan</h4>
+    <div class="icode-wrap"><span class="icode-lbl">&#128273; Interest Code:</span><div class="icode-badges">${icBadges}</div><span style="font-size:.74rem;color:var(--M)">(3 tipe teratas)</span></div>
+    <div class="rbar-wrap">${rBars}</div>
+    <p style="font-size:.72rem;color:var(--M);margin:5px 0 11px">Sumber: Holland RIASEC Theory &amp; The RIASEC Test (42 pernyataan terstandarisasi)</p>
+    <div class="ri-cards">${riCards}</div></div>`;
+
+  // BLOK 4 — % KARIER
+  const matchBlok=`<div class="sc o"><h4>&#128202; Persentase Kecocokan Karier (Profil RIASEC)</h4>
+    <p style="font-size:.79rem;color:#7a4800;margin-bottom:11px;">Dihitung dari kesesuaian skor RIASEC dengan bobot tuntutan setiap karier.</p>
+    <div class="mlist">${d.matches.map((c,i)=>{const col=pctC[i]||'#888';return`<div class="mi2"><div class="mih"><span class="mik">${i+1}. ${c.n}</span><span class="mipct" style="color:${col}">${c.pct}%</span></div><div class="mbb"><div class="mbf" style="width:${Math.min(c.pct,100)}%;background:${col};"></div></div><div class="mir">${c.alasan}</div></div>`;}).join('')}</div>
+    <p style="font-size:.69rem;color:var(--M);margin-top:10px">* Bukan jaminan absolut — untuk referensi eksplorasi karier.</p></div>`;
+
+  // BLOK 5 — MAPEL REC & PRODI
+  const mapelBlok=`<div class="sc g"><h4>&#128218; 4 Mapel Rekomendasi (Minat &amp; Bakat)</h4>
+    <p style="font-size:.8rem;color:#1a6e30;margin-bottom:8px">Berdasarkan kecerdasan <strong>${mL[d.mTop[0]]||d.mTop[0]}</strong> &amp; minat <strong>${rL[d.rTop[0]]||d.rTop[0]}</strong>:</p>
+    <div class="mtags">${d.comb.map(m=>`<span class="mtag" style="background:var(--G);color:#fff">${m}</span>`).join('')}</div></div>`;
+  const prodiBlok=`<div class="sc p"><h4>&#127891; Rekomendasi Program Studi</h4>
+    <p style="font-size:.8rem;color:#4a1e9e;margin-bottom:8px">Irisan cita-cita &times; minat-bakat:</p>
+    <ul class="plist">${d.allProdi.map(p=>`<li>${p}</li>`).join('')}</ul></div>`;
+
+  // BLOK 6 — CASEL
+  const cBarC={'Self-Awareness':'#0056b3','Self-Management':'#28a745','Social Awareness':'#fd7e14','Relationship Skills':'#6f42c1','Responsible Decision-Making':'#dc3545'};
+  const cBars=Object.entries(d.cPct).map(([k,v])=>{const col=cBarC[k]||'#888';const st=parseFloat(v)>=80?'&#9989;':parseFloat(v)>=60?'&#128993;':'&#9888;&#65039;';return`<div class="cbar-row"><span class="cbar-lbl">${k} ${st}</span><div class="cbar-bg"><div class="cbar-fill" style="width:${v}%;background:${col};">${v}%</div></div><span class="cbar-pct" style="color:${col}">${v}%</span></div>`;}).join('');
+  let cRecHtml='';if(d.lowC.length>0){cRecHtml=`<div class="clow"><strong>&#128161; Rekomendasi:</strong>${d.lowC.map(k=>`<div style="margin-top:8px"><strong>${k}:</strong><ul>${(CASEL_RECS[k]||[]).map(r=>`<li>${r}</li>`).join('')}</ul></div>`).join('')}</div>`;}
+  const caselBlok=`<div class="sc p"><h4>&#10084;&#65039; Profil Sosial Emosional (CASEL) &mdash; ${d.cStatus}</h4>
+    <p style="font-size:.73rem;color:var(--M);margin-bottom:9px">&#9989; &#8805;80% Sangat Baik &nbsp;|&nbsp; &#128993; 60&ndash;79% Cukup &nbsp;|&nbsp; &#9888;&#65039; &lt;60% Perlu Perhatian</p>
+    <div class="cbar-wrap">${cBars}</div>${cRecHtml}
+    ${d.lowC.length>0?'<div class="snote"><strong>&#10084;&#65039; Catatan</strong>Beberapa komponen perlu perhatian — segera bicara dengan Guru BK!</div>':''}</div>`;
+
+  el.innerHTML=`
+    <div class="saving-banner">&#10003; Data kamu telah dikirim ke database &mdash; guru dapat mengunduh rekapan dari dashboard admin.</div>
+    <div class="rh fin"><h2>&#127881; Hasil Asesmen Minat &amp; Bakat</h2>
+      <p class="rs">RIASEC (42 Soal) &middot; Multiple Intelligences &middot; VARK &middot; CASEL &middot; SNBP Kepmendikbudristek No. 345/M/2022</p>
+      <div class="rn">&#128100; ${d.name} &nbsp;|&nbsp; ${d.kelas} &nbsp;|&nbsp; ${jL[d.jurusan]||d.jurusan}</div>
+    </div>
+    <div class="sgrid fin">
+      <div class="chip"><div class="cl">&#127959; RIASEC Dominan</div><div class="cv">${d.rTop.slice(0,2).map(r=>rL[r]||r).join(' &middot; ')}</div></div>
+      <div class="chip g"><div class="cl">&#129504; Kecerdasan MI</div><div class="cv">${d.mTop.map(m=>mL[m]||m).join(' &middot; ')}</div></div>
+      <div class="chip o"><div class="cl">&#128218; Gaya Belajar</div><div class="cv">${d.vTop[0]}</div></div>
+      <div class="chip p"><div class="cl">&#10084; Sosial Emosional</div><div class="cv">${d.cStatus}</div></div>
+    </div>
+    ${snbpBlok}${mapelMatchBlok}${riasecBlok}${matchBlok}${mapelBlok}${prodiBlok}${caselBlok}
+    <div class="abtns">
+      <button class="bpdf" onclick="dlPDF()">&#128196; Download PDF Hasil</button>
+      <button class="brst" onclick="location.reload()">&#128260; Isi Ulang Asesmen</button>
+    </div>`;
+
+  setTimeout(()=>{document.querySelectorAll('.mbf,.rbar-fill,.cbar-fill').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>{b.style.width=w;},50);});},150);
+}
+
+// PDF (ringkas)
+async function dlPDF(){
+  const btn=document.querySelector('.bpdf');const orig=btn.innerHTML;
+  btn.innerHTML='<span class="spin"></span> PDF...';btn.disabled=true;
+  try{
+    const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const name=document.getElementById('sname').value.trim()||'Siswa';
+    const kelas=document.getElementById('skelas').value.trim();
+    const jurusan=document.getElementById('smaj').value;
+    const dream=document.getElementById('sdream').value.trim();
+    const W=210,M=16,cW=W-M*2;let y=0;
+    const sf=(sz,st='normal',c=[30,35,64])=>{doc.setFontSize(sz);doc.setFont('helvetica',st);doc.setTextColor(...c);};
+    const rf=(x,yr,w,h,r,f)=>{doc.setFillColor(...f);doc.roundedRect(x,yr,w,h,r,r,'F');};
+    const ck=(n=15)=>{if(y+n>278){doc.addPage();y=16;}};
+    rf(0,0,W,44,0,[0,61,130]);rf(0,36,W,8,0,[26,117,214]);
+    sf(13,'bold',[255,255,255]);doc.text('LAPORAN ASESMEN MINAT, BAKAT & REKOMENDASI SNBP',W/2,11,{align:'center'});
+    sf(7,'normal',[180,210,255]);doc.text('RIASEC (42 Soal) · Multiple Intelligences · VARK · CASEL · Kepmendikbudristek No. 345/M/2022',W/2,19,{align:'center'});
+    sf(8,'bold',[255,255,255]);doc.text(`${name}  |  ${kelas}  |  ${jurusan}  |  Cita-cita: ${dream}`,W/2,29,{align:'center',maxWidth:cW});
+    sf(7,'normal',[180,210,255]);doc.text(`Dicetak: ${new Date().toLocaleString('id-ID')}`,W/2,37,{align:'center'});
+    y=50;
+    // Chips
+    const chips=document.querySelectorAll('.chip .cv');
+    if(chips.length>=4){
+      const cd=[{l:'RIASEC',v:chips[0].textContent,c:[0,86,179]},{l:'Kecerdasan MI',v:chips[1].textContent,c:[40,140,70]},{l:'Gaya Belajar',v:chips[2].textContent,c:[220,100,20]},{l:'Sosial Emosional',v:chips[3].textContent,c:[100,60,180]}];
+      const cw2=(cW-6)/2;cd.forEach((c,i)=>{const cx=M+(i%2)*(cw2+6),cy=y+Math.floor(i/2)*22;rf(cx,cy,cw2,18,4,c.c);sf(6.5,'bold',[255,255,255]);doc.text(c.l,cx+4,cy+6);sf(7,'bold',[255,255,255]);doc.text(doc.splitTextToSize(c.v,cw2-8)[0]||'',cx+4,cy+13);});y+=50;
+    }
+    // SNBP mapel
+    const m4els=document.querySelectorAll('.m4i');
+    if(m4els.length){
+      const prdi=document.querySelector('.sc.b p strong')?.textContent||'';
+      ck(14+m4els.length*14);rf(M,y,cW,9,3,[0,86,179]);sf(8,'bold',[255,255,255]);doc.text('4 MAPEL PENDUKUNG SNBP — '+dream.toUpperCase(),M+4,y+6);y+=12;
+      m4els.forEach((el,i)=>{ck(14);const n=el.querySelector('.m4nm')?.textContent||'';const k=el.querySelector('.m4k')?.textContent||'';sf(7.5,'bold',[30,40,80]);doc.text(`${i+1}. ${n}`,M+4,y+5);sf(6.5,'normal',[100,110,140]);doc.text(`   ${k}`,M+4,y+10);y+=14;});y+=4;
+    }
+    // Mapel analisis
+    if(document.querySelector('.ma-grid')){
+      const maItems=document.querySelectorAll('.ma-item');
+      if(maItems.length){
+        ck(14+maItems.length*9);rf(M,y,cW,9,3,[0,105,92]);sf(8,'bold',[255,255,255]);doc.text('ANALISIS KESESUAIAN MAPEL FAVORIT',M+4,y+6);y+=12;
+        maItems.forEach(el=>{ck(8);const mp=el.querySelector('.ma-mapel')?.textContent||'';const st=el.querySelector('.ma-status')?.textContent||'';const nt=el.querySelector('.ma-note')?.textContent||'';sf(7.5,'bold',[30,40,80]);doc.text(`${st} ${mp}`,M+4,y+5);sf(6,'normal',[100,110,140]);doc.text(`   ${nt}`,M+4,y+10);y+=13;});y+=4;
+      }
+    }
+    // % Karier
+    const miEls=document.querySelectorAll('.mi2');
+    if(miEls.length){
+      ck(14+miEls.length*12);rf(M,y,cW,9,3,[200,90,20]);sf(8,'bold',[255,255,255]);doc.text('% KECOCOKAN KARIER',M+4,y+6);y+=12;
+      miEls.forEach((el,i)=>{ck(12);const n=el.querySelector('.mik')?.textContent||'';const p=el.querySelector('.mipct')?.textContent||'';const pN=parseInt(p)||0;rf(M+2,y,cW-4,8,2,[240,244,250]);rf(M+2,y,(cW-4)*pN/100,8,2,[200,90,20]);sf(7.5,'bold',[30,40,80]);doc.text(n,M+5,y+5.5);sf(8,'bold',[200,90,20]);doc.text(p,W-M-4,y+5.5,{align:'right'});y+=10;});y+=4;
+    }
+    // Prodi
+    const prodiItems=[...document.querySelectorAll('.plist li')].map(li=>li.textContent.trim());
+    if(prodiItems.length){ck(14+prodiItems.length*8);rf(M,y,cW,9,3,[100,60,180]);sf(8,'bold',[255,255,255]);doc.text('REKOMENDASI PROGRAM STUDI',M+4,y+6);y+=12;prodiItems.forEach(p=>{ck(8);sf(7.5,'normal',[40,50,80]);doc.text(`• ${p}`,M+4,y+5);y+=8;});y+=4;}
+    // Footer
+    ck(16);rf(M,y,cW,14,3,[240,244,251]);sf(7,'normal',[80,90,120]);doc.text('Laporan ini digenerate otomatis dari Sistem Asesmen Minat & Bakat SNBP.',M+4,y+5);doc.text('Regulasi: Kepmendikbudristek RI No. 345/M/2022 tentang Mapel Pendukung Program Studi SNBP.',M+4,y+10);
+    doc.save(`Hasil_Asesmen_${name.replace(/\s+/g,'_')}.pdf`);
+  }catch(e){alert('Gagal PDF: '+e.message);}
+  finally{btn.innerHTML=orig;btn.disabled=false;}
+}
+
+window.onload=()=>{renderMapel();renderQ();};
+</script>
+</body>
+</html>
