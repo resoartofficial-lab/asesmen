@@ -219,12 +219,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--BG);color:var(-
 
 <script>
 // ════════════════════════════════════════════
-// KONFIGURASI SUPABASE — ISI SESUAI AKUN ANDA
-// Daftar gratis di: https://supabase.com
+// KONFIGURASI GOOGLE SHEETS
+// Isi SCRIPT_URL setelah deploy Apps Script
 // ════════════════════════════════════════════
-const SUPA_URL  = 'https://sraynffrcvabgaoogagt.supabase.co';
-const SUPA_KEY  = 'sb_publishable_bdCD0RVqk-8gF2qYVwHEuw_FK-qjQ8W';
-const TABEL     = 'asesmen_siswa'; // nama tabel di Supabase
 
 // ════════════════════════════════════════════
 // MATA PELAJARAN SMA LENGKAP (semua kurikulum)
@@ -461,19 +458,18 @@ function topN(sc,n=2){return Object.entries(sc).sort(([,a],[,b])=>b-a).slice(0,n
 // ════════════════════════════════════════════
 // SUPABASE SAVE
 // ════════════════════════════════════════════
+// URL Apps Script — ganti setelah deploy
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzjwDT-xRrMwwhXNM-w0pI6ahodtmgI73R4d5KG1rl_X5cJjEgPkErMjs6GjVi2-2Ez/exec';
+
 async function saveToSupabase(rec){
-  if(false){
-    // Fallback: simpan ke localStorage juga
-    try{const d=JSON.parse(localStorage.getItem('asesmen_backup')||'[]');d.push(rec);localStorage.setItem('asesmen_backup',JSON.stringify(d));}catch(e){}
-    return {ok:false,msg:'Supabase belum dikonfigurasi — data disimpan lokal saja'};
-  }
   try{
-    const res=await fetch(`${SUPA_URL}/rest/v1/${TABEL}`,{
+    await fetch(SCRIPT_URL,{
       method:'POST',
-      headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'},
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain'},
       body:JSON.stringify(rec)
     });
-    return res.ok?{ok:true}:{ok:false,msg:'Error '+res.status};
+    return {ok:true};
   }catch(e){return{ok:false,msg:e.message};}
 }
 
