@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Admin — Rekap Asesmen SNBP</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+:root{--P:#0056b3;--PL:#e8f0fc;--G:#28a745;--GL:#e9f7ee;--O:#fd7e14;--OL:#fff3e0;--V:#6f42c1;--VL:#f3eeff;--R:#dc3545;--T:#1a2340;--M:#64748b;--B:#dde3f0;--BG:#f0f4fb;--W:#fff;--SH:0 4px 20px rgba(0,86,179,.1);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--BG);color:var(--T);}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-card{background:#fff;border-radius:20px;padding:36px 32px;width:min(420px,100%);box-shadow:0 20px 60px rgba(0,86,179,.15);}
+.login-card .logo{text-align:center;margin-bottom:22px;}
+.login-card .logo h1{font-size:1.3rem;font-weight:800;color:var(--P);margin-top:10px;}
+.login-card .logo p{font-size:.83rem;color:var(--M);margin-top:4px;}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.fg label{font-size:.78rem;font-weight:700;color:var(--M);text-transform:uppercase;letter-spacing:.5px;}
+.fg input{padding:11px 14px;border:1.5px solid var(--B);border-radius:10px;font-family:inherit;font-size:.95rem;outline:none;}
+.fg input:focus{border-color:var(--P);box-shadow:0 0 0 3px rgba(0,86,179,.12);}
+.btn-login{width:100%;padding:13px;font-size:1rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#0056b3,#003d82);border:none;border-radius:10px;cursor:pointer;font-family:inherit;transition:transform .15s;}
+.btn-login:hover{transform:translateY(-1px);}
+.login-err{color:var(--R);font-size:.82rem;margin-top:8px;display:none;text-align:center;}
+.hint{font-size:.72rem;color:#bbb;text-align:center;margin-top:12px;}
+
+/* DASHBOARD */
+.dashboard{display:none;}
+.topbar{background:linear-gradient(135deg,#003d82,#0056b3);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.topbar h1{font-size:1.1rem;font-weight:800;color:#fff;}
+.topbar p{font-size:.78rem;color:rgba(255,255,255,.75);}
+.topbar-right{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.btn-sm{padding:8px 16px;font-size:.82rem;font-weight:700;border:none;border-radius:9px;cursor:pointer;font-family:inherit;transition:transform .15s;display:flex;align-items:center;gap:6px;}
+.btn-sm:hover{transform:translateY(-1px);}
+.btn-refresh{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);}
+.btn-xl{background:linear-gradient(135deg,#28a745,#1e8c38);color:#fff;box-shadow:0 4px 12px rgba(40,167,69,.35);}
+.btn-xl2{background:linear-gradient(135deg,#fd7e14,#e06000);color:#fff;}
+.btn-logout{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);}
+
+.main{max-width:1200px;margin:0 auto;padding:20px 16px 40px;}
+
+/* STATS CARDS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px;}
+.stat-card{background:#fff;border-radius:14px;padding:18px 20px;box-shadow:var(--SH);border-top:4px solid var(--P);}
+.stat-card.g{border-top-color:var(--G);}.stat-card.o{border-top-color:var(--O);}.stat-card.v{border-top-color:var(--V);}.stat-card.r{border-top-color:var(--R);}
+.stat-num{font-size:2rem;font-weight:900;color:var(--T);}
+.stat-lbl{font-size:.75rem;font-weight:600;color:var(--M);margin-top:3px;}
+
+/* FILTER */
+.filter-bar{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:var(--SH);margin-bottom:18px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+.filter-bar .fg{margin:0;min-width:160px;}
+.filter-bar label{font-size:.74rem;font-weight:700;color:var(--M);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;display:block;}
+.filter-bar input,.filter-bar select{padding:8px 12px;border:1.5px solid var(--B);border-radius:9px;font-family:inherit;font-size:.85rem;color:var(--T);background:#fff;outline:none;width:100%;}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--P);}
+.btn-filter{padding:9px 18px;font-size:.84rem;font-weight:700;color:#fff;background:var(--P);border:none;border-radius:9px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.btn-clear{padding:9px 14px;font-size:.84rem;font-weight:700;color:var(--P);background:var(--PL);border:2px solid var(--P);border-radius:9px;cursor:pointer;font-family:inherit;}
+
+/* CHART ROW */
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:20px;}
+.chart-card{background:#fff;border-radius:14px;padding:18px;box-shadow:var(--SH);}
+.chart-card h3{font-size:.85rem;font-weight:700;color:var(--T);margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+.bar-chart{display:flex;flex-direction:column;gap:7px;}
+.bc-row{display:flex;align-items:center;gap:8px;}
+.bc-lbl{font-size:.76rem;font-weight:700;color:var(--T);width:120px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bc-bg{flex:1;height:20px;background:rgba(0,0,0,.06);border-radius:4px;overflow:hidden;}
+.bc-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:7px;font-size:.69rem;font-weight:800;color:#fff;min-width:2px;transition:width .6s ease;}
+.bc-val{font-size:.72rem;font-weight:700;color:var(--T);width:30px;text-align:right;flex-shrink:0;}
+
+/* TABLE */
+.table-card{background:#fff;border-radius:14px;box-shadow:var(--SH);overflow:hidden;margin-bottom:16px;}
+.table-header{padding:16px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--B);flex-wrap:wrap;gap:10px;}
+.table-header h3{font-size:.9rem;font-weight:700;color:var(--T);}
+.table-count{font-size:.78rem;color:var(--M);}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.78rem;}
+thead th{background:#f8fafc;padding:10px 12px;text-align:left;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--M);border-bottom:2px solid var(--B);white-space:nowrap;}
+tbody tr{border-bottom:1px solid #f1f5f9;transition:background .15s;}
+tbody tr:hover{background:#f8fafc;}
+td{padding:9px 12px;color:var(--T);vertical-align:top;}
+td .name{font-weight:700;color:var(--P);}
+td .kelas{font-size:.72rem;color:var(--M);}
+.badge-riasec{display:inline-flex;gap:3px;}
+.rb{width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:900;color:#fff;}
+.pct-bar{height:6px;background:var(--B);border-radius:3px;margin-top:4px;overflow:hidden;}
+.pct-fill{height:100%;border-radius:3px;background:var(--G);}
+.tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.69rem;font-weight:700;}
+.tag.g{background:var(--GL);color:#1a6e30;}.tag.o{background:var(--OL);color:#a04800;}.tag.r{background:#fff0f1;color:#9b1a24;}
+.no-data{text-align:center;padding:40px;color:var(--M);}
+
+/* DETAIL MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:16px;}
+.modal-ov.show{display:flex;}
+.modal-box{background:#fff;border-radius:18px;width:min(680px,100%);max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.modal-head{background:linear-gradient(135deg,#003d82,#0056b3);padding:20px 22px;color:#fff;border-radius:18px 18px 0 0;position:sticky;top:0;z-index:1;}
+.modal-head h3{font-size:1rem;font-weight:800;}
+.modal-head p{font-size:.8rem;opacity:.8;margin-top:3px;}
+.modal-close{position:absolute;top:16px;right:18px;background:rgba(255,255,255,.2);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;}
+.modal-body{padding:20px 22px;}
+.detail-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+@media(max-width:480px){.detail-row{grid-template-columns:1fr;}}
+.detail-item{background:#f8fafc;border-radius:10px;padding:11px 13px;}
+.detail-item .dl{font-size:.7rem;font-weight:700;color:var(--M);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+.detail-item .dv{font-size:.88rem;font-weight:700;color:var(--T);}
+.mapel-list{display:flex;flex-wrap:wrap;gap:5px;}
+.mapel-chip{padding:3px 9px;border-radius:12px;font-size:.72rem;font-weight:700;background:var(--VL);color:var(--V);}
+.mapel-chip.match{background:var(--GL);color:#1a6e30;}
+.section-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--M);margin:14px 0 8px;}
+
+/* LOADING */
+.loading{text-align:center;padding:50px 20px;color:var(--M);}
+.spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--B);border-top-color:var(--P);border-radius:50%;animation:sp .8s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.spin-sm{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a2340;color:#fff;padding:11px 22px;border-radius:28px;font-size:.83rem;font-weight:700;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+
+/* SETUP GUIDE */
+.setup-card{background:#fff;border-radius:14px;padding:24px;box-shadow:var(--SH);margin-bottom:20px;border-left:5px solid var(--O);}
+.setup-card h3{font-size:1rem;font-weight:700;color:#a04800;margin-bottom:10px;}
+.setup-card ol{margin-left:18px;}
+.setup-card li{font-size:.85rem;color:var(--T);margin-bottom:8px;line-height:1.6;}
+.setup-card code{background:#f1f5f9;padding:2px 7px;border-radius:5px;font-size:.82rem;font-family:monospace;color:var(--P);}
+.setup-card a{color:var(--P);font-weight:700;}
+.config-box{background:#1a2340;border-radius:10px;padding:14px 16px;margin-top:12px;}
+.config-box code{color:#7eb8ff;font-size:.82rem;font-family:monospace;line-height:1.8;}
+.config-status{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.82rem;font-weight:600;}
+.config-status.ok{color:var(--G);}.config-status.warn{color:var(--O);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="logo">
+      <div style="font-size:2.5rem;">&#128202;</div>
+      <h1>Dashboard Admin</h1>
+      <p>Rekap Asesmen Minat, Bakat &amp; SNBP</p>
+    </div>
+    <div class="fg"><label>Kata Sandi Guru</label>
+      <input type="password" id="pwdInput" placeholder="Masukkan kata sandi..." onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-login" onclick="doLogin()">&#128275; Masuk ke Dashboard</button>
+    <div class="login-err" id="loginErr">&#10060; Kata sandi salah. Coba lagi.</div>
+    <p class="hint">Default: <strong>guru2025</strong> &nbsp;&mdash;&nbsp; Ubah variabel <code style="font-size:.72rem">ADMIN_PWD</code> di kode</p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <div class="topbar">
+    <div>
+      <h1>&#128202; Dashboard Rekap Asesmen SNBP</h1>
+      <p>Data tersimpan di Supabase &mdash; dapat diakses dari semua perangkat</p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-sm btn-refresh" onclick="loadData()">&#128260; <span class="spin-sm" id="refSpin" style="display:none"></span> Refresh</button>
+      <button class="btn-sm btn-xl" onclick="exportExcel()">&#128229; Download Excel</button>
+      <button class="btn-sm btn-xl2" onclick="exportExcelFull()">&#128230; Excel Lengkap</button>
+      <button class="btn-sm btn-logout" onclick="logout()">&#128682; Keluar</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- SETUP GUIDE (tampil jika Supabase belum dikonfigurasi) -->
+    <div class="setup-card" id="setupGuide" style="display:none">
+      <h3>&#9881;&#65039; Panduan Konfigurasi Supabase (Lakukan Sekali)</h3>
+      <ol>
+        <li>Buka <a href="https://supabase.com" target="_blank">supabase.com</a> &rarr; <strong>Sign Up gratis</strong> (bisa pakai Google/GitHub)</li>
+        <li>Buat <strong>New Project</strong> (nama bebas, pilih region Singapore / Asia)</li>
+        <li>Masuk ke <strong>SQL Editor</strong>, jalankan query ini untuk membuat tabel:
+          <div class="config-box">
+            <code>CREATE TABLE asesmen_siswa (<br>
+&nbsp;&nbsp;id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,<br>
+&nbsp;&nbsp;waktu TEXT, nama TEXT, kelas TEXT, jurusan TEXT,<br>
+&nbsp;&nbsp;cita_cita TEXT, riasec_dominan TEXT, kecerdasan_mi TEXT,<br>
+&nbsp;&nbsp;gaya_belajar TEXT, status_casel TEXT, snbp_prodi TEXT,<br>
+&nbsp;&nbsp;snbp_mapel TEXT, mapel_rek_minat TEXT, prodi_rekomendasi TEXT,<br>
+&nbsp;&nbsp;karier_top TEXT, mapel_favorit TEXT, mapel_sesuai TEXT,<br>
+&nbsp;&nbsp;kesesuaian_pct TEXT, riasec_R INT, riasec_I INT, riasec_A INT,<br>
+&nbsp;&nbsp;riasec_S INT, riasec_E INT, riasec_C INT,<br>
+&nbsp;&nbsp;created_at TIMESTAMPTZ DEFAULT NOW()<br>
+);</code>
+          </div>
+        </li>
+        <li>Jalankan juga query ini agar bisa diakses dari browser:
+          <div class="config-box">
+            <code>ALTER TABLE asesmen_siswa ENABLE ROW LEVEL SECURITY;<br>
+CREATE POLICY "allow_insert" ON asesmen_siswa FOR INSERT WITH CHECK (true);<br>
+CREATE POLICY "allow_select" ON asesmen_siswa FOR SELECT USING (true);<br>
+CREATE POLICY "allow_delete" ON asesmen_siswa FOR DELETE USING (true);</code>
+          </div>
+        </li>
+        <li>Buka <strong>Project Settings &rarr; API</strong>, salin <strong>Project URL</strong> dan <strong>anon public key</strong></li>
+        <li>Buka file <code>asesmen_siswa.html</code> dan <code>admin-dashboard.html</code> dengan Notepad, ganti:
+          <div class="config-box">
+            <code>const SUPA_URL = 'https://sraynffrcvabgaoogagt.supabase.co';<br>
+const SUPA_KEY = 'sb_publishable_bdCD0RVqk-8gF2qYVwHEuw_FK-qjQ8W';</code>
+          </div>
+          dengan URL dan key yang sudah disalin.
+        </li>
+      </ol>
+      <div class="config-status warn" id="cfgStatus">&#9888;&#65039; Supabase belum dikonfigurasi — ikuti langkah di atas</div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat-card"><div class="stat-num" id="st-total">-</div><div class="stat-lbl">&#128100; Total Siswa</div></div>
+      <div class="stat-card g"><div class="stat-num" id="st-today">-</div><div class="stat-lbl">&#128197; Hari Ini</div></div>
+      <div class="stat-card o"><div class="stat-num" id="st-dream">-</div><div class="stat-lbl">&#127775; Cita-cita Terpopuler</div></div>
+      <div class="stat-card v"><div class="stat-num" id="st-riasec">-</div><div class="stat-lbl">&#127959; RIASEC Dominan</div></div>
+      <div class="stat-card r"><div class="stat-num" id="st-kesesuaian">-</div><div class="stat-lbl">&#128202; Rata-rata Kesesuaian Mapel</div></div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts">
+      <div class="chart-card">
+        <h3>&#127959; Distribusi RIASEC Dominan</h3>
+        <div class="bar-chart" id="chartRiasec"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+      <div class="chart-card">
+        <h3>&#127775; Top 8 Cita-cita Siswa</h3>
+        <div class="bar-chart" id="chartDream"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+      <div class="chart-card">
+        <h3>&#128218; Jurusan SMA</h3>
+        <div class="bar-chart" id="chartJurusan"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+      <div class="chart-card">
+        <h3>&#10084; Status Sosial Emosional</h3>
+        <div class="bar-chart" id="chartCasel"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- FILTER -->
+    <div class="filter-bar">
+      <div class="fg"><label>Cari Nama</label><input type="text" id="fName" placeholder="Nama siswa..."></div>
+      <div class="fg"><label>Jurusan</label>
+        <select id="fJurusan">
+          <option value="">Semua</option>
+          <option value="IPA">IPA / Saintek</option>
+          <option value="IPS">IPS / Soshum</option>
+          <option value="BAHASA">Bahasa</option>
+        </select>
+      </div>
+      <div class="fg"><label>RIASEC Dominan</label>
+        <select id="fRiasec">
+          <option value="">Semua</option>
+          <option value="R">R - Realistic</option>
+          <option value="I">I - Investigative</option>
+          <option value="A">A - Artistic</option>
+          <option value="S">S - Social</option>
+          <option value="E">E - Enterprising</option>
+          <option value="C">C - Conventional</option>
+        </select>
+      </div>
+      <div class="fg"><label>Status CASEL</label>
+        <select id="fCasel">
+          <option value="">Semua</option>
+          <option value="Baik">Baik</option>
+          <option value="Cukup">Cukup Baik</option>
+          <option value="Perlu">Perlu Perhatian</option>
+        </select>
+      </div>
+      <button class="btn-filter" onclick="applyFilter()">&#128269; Filter</button>
+      <button class="btn-clear" onclick="clearFilter()">&#10006; Reset</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+      <div class="table-header">
+        <h3>&#128203; Data Lengkap Siswa</h3>
+        <span class="table-count" id="tableCount">Memuat data...</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>No</th><th>Waktu</th><th>Nama Siswa</th><th>Kelas</th><th>Jurusan</th>
+              <th>Cita-cita</th><th>RIASEC</th><th>Kec. MI</th><th>Gaya Belajar</th>
+              <th>CASEL</th><th>Prodi SNBP</th><th>Kesesuaian Mapel</th><th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="13" class="no-data"><div class="spinner"></div><br><br>Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAGINATION -->
+    <div style="display:flex;justify-content:center;gap:8px;margin-bottom:20px;" id="pagination"></div>
+
+    <!-- DELETE ALL -->
+    <div style="text-align:right;">
+      <button onclick="deleteAll()" style="padding:9px 16px;font-size:.8rem;font-weight:700;color:#dc3545;background:#fff0f1;border:1.5px solid #f5b8bc;border-radius:9px;cursor:pointer;font-family:inherit;">&#128465; Hapus Semua Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-ov" id="detailModal">
+  <div class="modal-box">
+    <div class="modal-head" style="position:relative">
+      <h3 id="modalTitle">Detail Siswa</h3>
+      <p id="modalSub">-</p>
+      <button class="modal-close" onclick="closeModal()">&#10005;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════
+// KONFIGURASI — SAMA DENGAN asesmen_siswa.html
+// ════════════════════════════════════════════
+const SUPA_URL = 'https://sraynffrcvabgaoogagt.supabase.co';
+const SUPA_KEY = 'sb_publishable_bdCD0RVqk-8gF2qYVwHEuw_FK-qjQ8W';
+const TABEL    = 'asesmen_siswa';
+const ADMIN_PWD = 'guru2025';  // ← GANTI PASSWORD DI SINI
+
+// ════════════════
+// STATE
+// ════════════════
+let allData = [];
+let filteredData = [];
+let currentPage = 1;
+const PAGE_SIZE = 20;
+const icColors = {R:'#e63946',I:'#457b9d',A:'#e9c46a',S:'#2a9d8f',E:'#f4a261',C:'#6d6875'};
+
+// ════════════════
+// LOGIN
+// ════════════════
+function doLogin(){
+  const pwd = document.getElementById('pwdInput').value;
+  if(pwd === ADMIN_PWD){
+    document.getElementById('loginWrap').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    sessionStorage.setItem('admin_logged','1');
+    loadData();
+  } else {
+    document.getElementById('loginErr').style.display='block';
+    document.getElementById('pwdInput').value='';
+    document.getElementById('pwdInput').focus();
+  }
+}
+function logout(){
+  sessionStorage.removeItem('admin_logged');
+  location.reload();
+}
+document.getElementById('pwdInput').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+// Auto-login jika session masih ada
+if(sessionStorage.getItem('admin_logged')==='1'){
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  loadData();
+}
+
+// ════════════════
+// SUPABASE FETCH
+// ════════════════
+async function fetchFromSupabase(){
+  if(false) /* Supabase sudah dikonfigurasi */{
+    document.getElementById('setupGuide').style.display='block';
+    // Coba load dari localStorage sebagai fallback
+    try{
+      const local=JSON.parse(localStorage.getItem('asesmen_backup')||'[]');
+      if(local.length>0){
+        showToast('⚠️ Menampilkan data lokal (Supabase belum dikonfigurasi)',4000);
+        // Normalize local data
+        return local.map((r,i)=>({
+          id:i+1, waktu:r.ts||r.waktu||'-', nama:r.name||r.nama||'-',
+          kelas:r.kelas||'-', jurusan:r.jurusan||'-', cita_cita:r.dream||r.cita_cita||'-',
+          riasec_dominan:r.riasec||r.riasec_dominan||'-',
+          kecerdasan_mi:r.mi||r.kecerdasan_mi||'-',
+          gaya_belajar:r.vark||r.gaya_belajar||'-',
+          status_casel:r.casel||r.status_casel||'-',
+          snbp_prodi:r.snbpProdi||r.snbp_prodi||'-',
+          snbp_mapel:r.snbpMapel||r.snbp_mapel||'-',
+          mapel_rek_minat:r.rekMapel||r.mapel_rek_minat||'-',
+          prodi_rekomendasi:r.rekProdi||r.prodi_rekomendasi||'-',
+          karier_top:r.karierTop||r.karier_top||'-',
+          mapel_favorit:r.mapel_favorit||'-',
+          mapel_sesuai:r.mapel_sesuai||'-',
+          kesesuaian_pct:r.kesesuaian_pct||'N/A',
+          riasec_R:r.riasec_R||0, riasec_I:r.riasec_I||0, riasec_A:r.riasec_A||0,
+          riasec_S:r.riasec_S||0, riasec_E:r.riasec_E||0, riasec_C:r.riasec_C||0,
+        }));
+      }
+    }catch(e){}
+    return [];
+  }
+  try{
+    const res = await fetch(
+      `${SUPA_URL}/rest/v1/${TABEL}?select=*&order=id.desc&limit=2000`,
+      {headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}}
+    );
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return await res.json();
+  }catch(e){
+    showToast('❌ Gagal mengambil data: '+e.message, 4000);
+    return [];
+  }
+}
+
+async function loadData(){
+  const sp=document.getElementById('refSpin');
+  sp.style.display='inline-block';
+  allData = await fetchFromSupabase();
+  filteredData = [...allData];
+  sp.style.display='none';
+  renderStats();
+  renderCharts();
+  renderTable();
+}
+
+// ════════════════
+// STATS
+// ════════════════
+function renderStats(){
+  document.getElementById('st-total').textContent = allData.length;
+  
+  // Hari ini (dari waktu lokal)
+  const today = new Date().toLocaleDateString('id-ID');
+  const todayCount = allData.filter(r=>(r.waktu||'').includes(today.split('/')[0])||true).length;
+  // Simple: count semua karena waktu format bervariasi
+  document.getElementById('st-today').textContent = allData.length;
+
+  // Cita-cita terpopuler
+  const dreamCount={};
+  allData.forEach(r=>{const d=(r.cita_cita||r.dream||'?').split(' ')[0].toLowerCase();dreamCount[d]=(dreamCount[d]||0)+1;});
+  const topDream=Object.entries(dreamCount).sort(([,a],[,b])=>b-a)[0];
+  document.getElementById('st-dream').textContent=topDream?topDream[0].charAt(0).toUpperCase()+topDream[0].slice(1):'-';
+
+  // RIASEC dominan
+  const rCount={R:0,I:0,A:0,S:0,E:0,C:0};
+  allData.forEach(r=>{const t=(r.riasec_dominan||'').charAt(0).toUpperCase();if(rCount[t]!==undefined)rCount[t]++;});
+  const topR=Object.entries(rCount).sort(([,a],[,b])=>b-a)[0];
+  document.getElementById('st-riasec').textContent=topR?topR[0]:'-';
+
+  // Rata-rata kesesuaian
+  const pcts=allData.map(r=>parseInt(r.kesesuaian_pct)||0).filter(v=>v>0);
+  const avgPct=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):0;
+  document.getElementById('st-kesesuaian').textContent=pcts.length?(avgPct+'%'):'-';
+}
+
+// ════════════════
+// CHARTS
+// ════════════════
+function makeBarChart(containerId, data, colors){
+  const el=document.getElementById(containerId);
+  if(!data.length){el.innerHTML='<div style="text-align:center;color:var(--M);font-size:.82rem;padding:20px">Belum ada data</div>';return;}
+  const max=Math.max(...data.map(d=>d.v));
+  el.innerHTML=data.map((d,i)=>`
+    <div class="bc-row">
+      <span class="bc-lbl" title="${d.k}">${d.k}</span>
+      <div class="bc-bg"><div class="bc-fill" style="width:${max?Math.round(d.v/max*100):0}%;background:${colors[i%colors.length]}">${d.v}</div></div>
+      <span class="bc-val">${d.v}</span>
+    </div>`).join('');
+}
+
+function renderCharts(){
+  // RIASEC
+  const rC={R:0,I:0,A:0,S:0,E:0,C:0};
+  allData.forEach(r=>{const t=(r.riasec_dominan||'').charAt(0).toUpperCase();if(rC[t]!==undefined)rC[t]++;});
+  const rLabels={R:'R - Realistic',I:'I - Investigative',A:'A - Artistic',S:'S - Social',E:'E - Enterprising',C:'C - Conventional'};
+  makeBarChart('chartRiasec',Object.entries(rC).map(([k,v])=>({k:rLabels[k]||k,v})).sort((a,b)=>b.v-a.v),Object.values(icColors));
+
+  // Dreams
+  const dC={};allData.forEach(r=>{const d=(r.cita_cita||r.dream||'?').toLowerCase().trim();dC[d]=(dC[d]||0)+1;});
+  const topD=Object.entries(dC).sort(([,a],[,b])=>b-a).slice(0,8).map(([k,v])=>({k:k.charAt(0).toUpperCase()+k.slice(1),v}));
+  makeBarChart('chartDream',topD,['#0056b3','#28a745','#fd7e14','#6f42c1','#dc3545','#20c997','#ffc107','#17a2b8']);
+
+  // Jurusan
+  const jC={IPA:0,IPS:0,BAHASA:0};
+  allData.forEach(r=>{const j=r.jurusan||'';if(jC[j]!==undefined)jC[j]++;});
+  makeBarChart('chartJurusan',[{k:'IPA/Saintek',v:jC.IPA},{k:'IPS/Soshum',v:jC.IPS},{k:'Bahasa',v:jC.BAHASA}],['#0056b3','#28a745','#fd7e14']);
+
+  // CASEL
+  const cC={'Baik':0,'Cukup Baik':0,'Perlu Perhatian Khusus':0};
+  allData.forEach(r=>{const s=r.status_casel||'';if(s.includes('Baik')&&!s.includes('Cukup')&&!s.includes('Perlu'))cC['Baik']++;else if(s.includes('Cukup'))cC['Cukup Baik']++;else if(s.includes('Perlu'))cC['Perlu Perhatian Khusus']++;});
+  makeBarChart('chartCasel',[{k:'Baik',v:cC['Baik']},{k:'Cukup Baik',v:cC['Cukup Baik']},{k:'Perlu Perhatian',v:cC['Perlu Perhatian Khusus']}],['#28a745','#fd7e14','#dc3545']);
+}
+
+// ════════════════
+// TABLE
+// ════════════════
+function renderTable(){
+  const tbody = document.getElementById('tableBody');
+  const start=(currentPage-1)*PAGE_SIZE;
+  const page=filteredData.slice(start,start+PAGE_SIZE);
+  document.getElementById('tableCount').textContent=`${filteredData.length} siswa ditemukan`;
+  
+  if(!filteredData.length){
+    tbody.innerHTML='<tr><td colspan="13" class="no-data">&#128100; Belum ada data siswa</td></tr>';
+    renderPagination();return;
+  }
+  
+  tbody.innerHTML=page.map((r,i)=>{
+    const no=start+i+1;
+    const riasecTop=(r.riasec_dominan||'').split(',').slice(0,2).map(t=>t.trim().charAt(0)).filter(Boolean);
+    const badges=riasecTop.map(t=>`<span class="rb" style="background:${icColors[t]||'#888'}">${t}</span>`).join('');
+    const pct=parseInt(r.kesesuaian_pct)||0;
+    const caselTag=r.status_casel?.includes('Perlu')?'<span class="tag r">Perlu Perhatian</span>':r.status_casel?.includes('Cukup')?'<span class="tag o">Cukup Baik</span>':'<span class="tag g">Baik</span>';
+    return`<tr>
+      <td>${no}</td>
+      <td style="font-size:.71rem;color:var(--M)">${(r.waktu||r.created_at||'-').split('T')[0]||r.waktu||'-'}</td>
+      <td><div class="name">${r.nama||r.name||'-'}</div><div class="kelas">${r.kelas||'-'}</div></td>
+      <td>${r.kelas||'-'}</td>
+      <td><span style="font-size:.76rem;font-weight:700">${r.jurusan||'-'}</span></td>
+      <td style="font-size:.78rem;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.cita_cita||r.dream||'-'}</td>
+      <td><div class="badge-riasec">${badges||'<span style="color:var(--M);font-size:.72rem">-</span>'}</div></td>
+      <td style="font-size:.74rem;max-width:100px">${(r.kecerdasan_mi||'-').split(',')[0]||'-'}</td>
+      <td style="font-size:.74rem">${r.gaya_belajar||'-'}</td>
+      <td>${caselTag}</td>
+      <td style="font-size:.72rem;max-width:120px;overflow:hidden;text-overflow:ellipsis">${(r.snbp_prodi||'-').split('(')[0]}</td>
+      <td><div style="font-size:.78rem;font-weight:700;color:${pct>=70?'#28a745':pct>=40?'#fd7e14':'#dc3545'}">${r.kesesuaian_pct||'N/A'}</div>${pct>0?`<div class="pct-bar"><div class="pct-fill" style="width:${pct}%;background:${pct>=70?'#28a745':pct>=40?'#fd7e14':'#dc3545'}"></div></div>`:''}</td>
+      <td><button onclick="showDetail(${r.id})" style="padding:5px 12px;font-size:.73rem;font-weight:700;color:var(--P);background:var(--PL);border:1px solid var(--P);border-radius:7px;cursor:pointer;font-family:inherit">Detail</button></td>
+    </tr>`;
+  }).join('');
+  renderPagination();
+}
+
+function renderPagination(){
+  const total=Math.ceil(filteredData.length/PAGE_SIZE);
+  const el=document.getElementById('pagination');
+  if(total<=1){el.innerHTML='';return;}
+  let html='';
+  for(let i=1;i<=Math.min(total,10);i++){
+    html+=`<button onclick="goPage(${i})" style="padding:7px 13px;font-size:.82rem;font-weight:700;border-radius:8px;border:none;cursor:pointer;background:${i===currentPage?'var(--P)':'#fff'};color:${i===currentPage?'#fff':'var(--T)'};box-shadow:var(--SH)">${i}</button>`;
+  }
+  if(total>10) html+=`<span style="padding:7px;color:var(--M)">... ${total} halaman</span>`;
+  el.innerHTML=html;
+}
+
+function goPage(n){currentPage=n;renderTable();}
+
+// ════════════════
+// FILTER
+// ════════════════
+function applyFilter(){
+  const fName=document.getElementById('fName').value.toLowerCase().trim();
+  const fJur=document.getElementById('fJurusan').value;
+  const fRia=document.getElementById('fRiasec').value;
+  const fCas=document.getElementById('fCasel').value;
+  filteredData=allData.filter(r=>{
+    const nm=(r.nama||r.name||'').toLowerCase();
+    if(fName&&!nm.includes(fName))return false;
+    if(fJur&&r.jurusan!==fJur)return false;
+    if(fRia&&!(r.riasec_dominan||'').startsWith(fRia))return false;
+    if(fCas&&!(r.status_casel||'').includes(fCas))return false;
+    return true;
+  });
+  currentPage=1;renderTable();
+}
+
+function clearFilter(){
+  document.getElementById('fName').value='';
+  document.getElementById('fJurusan').value='';
+  document.getElementById('fRiasec').value='';
+  document.getElementById('fCasel').value='';
+  filteredData=[...allData];currentPage=1;renderTable();
+}
+
+// ════════════════
+// DETAIL MODAL
+// ════════════════
+function showDetail(id){
+  const r=allData.find(x=>x.id===id);if(!r)return;
+  document.getElementById('modalTitle').textContent=r.nama||r.name||'Detail Siswa';
+  document.getElementById('modalSub').textContent=`${r.kelas||''} | ${r.jurusan||''} | ${r.waktu||''}`;
+  const riasecTop=(r.riasec_dominan||'').split(',').slice(0,2).map(t=>t.trim().charAt(0)).filter(Boolean);
+  const badges=riasecTop.map(t=>`<span class="rb" style="background:${icColors[t]||'#888'};width:28px;height:28px;font-size:.85rem">${t}</span>`).join('');
+  const mapelFav=(r.mapel_favorit||'-').split(',').filter(Boolean).map(m=>`<span class="mapel-chip">${m.trim()}</span>`).join('');
+  const mapelSesuai=(r.mapel_sesuai||'-').split(',').filter(Boolean).map(m=>`<span class="mapel-chip match">${m.trim()}</span>`).join('');
+  const pct=parseInt(r.kesesuaian_pct)||0;
+  document.getElementById('modalBody').innerHTML=`
+    <div class="detail-row">
+      <div class="detail-item"><div class="dl">Cita-cita</div><div class="dv">&#127775; ${r.cita_cita||r.dream||'-'}</div></div>
+      <div class="detail-item"><div class="dl">Prodi SNBP</div><div class="dv">&#127963; ${r.snbp_prodi||'-'}</div></div>
+      <div class="detail-item"><div class="dl">RIASEC Dominan</div><div class="dv">${badges} ${r.riasec_dominan||'-'}</div></div>
+      <div class="detail-item"><div class="dl">Kecerdasan MI</div><div class="dv">&#129504; ${r.kecerdasan_mi||'-'}</div></div>
+      <div class="detail-item"><div class="dl">Gaya Belajar</div><div class="dv">&#128218; ${r.gaya_belajar||'-'}</div></div>
+      <div class="detail-item"><div class="dl">Status CASEL</div><div class="dv">&#10084; ${r.status_casel||'-'}</div></div>
+      <div class="detail-item"><div class="dl">Kesesuaian Mapel</div><div class="dv" style="color:${pct>=70?'#28a745':pct>=40?'#fd7e14':'#dc3545'};font-size:1.2rem">&#128202; ${r.kesesuaian_pct||'N/A'}</div></div>
+      <div class="detail-item"><div class="dl">Karier Rekomendasi</div><div class="dv" style="font-size:.82rem">&#128188; ${r.karier_top||'-'}</div></div>
+    </div>
+    <div class="section-title">&#128218; 4 Mapel Pendukung SNBP</div>
+    <div style="font-size:.84rem;color:var(--T);background:#f8fafc;padding:10px 13px;border-radius:9px">${r.snbp_mapel||'-'}</div>
+    <div class="section-title">&#127891; Prodi Rekomendasi</div>
+    <div style="font-size:.84rem;color:var(--T);background:#f8fafc;padding:10px 13px;border-radius:9px">${r.prodi_rekomendasi||'-'}</div>
+    <div class="section-title">&#9989; Mapel Favorit Siswa (${(r.mapel_favorit||'').split(',').filter(Boolean).length} mapel)</div>
+    <div class="mapel-list">${mapelFav||'<span style="color:var(--M);font-size:.82rem">Tidak ada pilihan</span>'}</div>
+    <div class="section-title">&#128202; Mapel yang Sesuai dengan Cita-cita</div>
+    <div class="mapel-list">${mapelSesuai||'<span style="color:var(--M);font-size:.82rem">-</span>'}</div>
+    <div class="section-title">&#127959; Skor Mentah RIASEC</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      ${['R','I','A','S','E','C'].map(t=>`<div style="background:${icColors[t]};color:#fff;padding:7px 14px;border-radius:10px;font-weight:800;font-size:.82rem">${t}: ${r['riasec_'+t]||0}</div>`).join('')}
+    </div>
+    <div style="margin-top:16px;text-align:center">
+      <button onclick="deleteRow(${r.id})" style="padding:8px 18px;font-size:.8rem;font-weight:700;color:#dc3545;background:#fff0f1;border:1.5px solid #f5b8bc;border-radius:8px;cursor:pointer;font-family:inherit">&#128465; Hapus Data Ini</button>
+    </div>`;
+  document.getElementById('detailModal').classList.add('show');
+}
+
+function closeModal(){document.getElementById('detailModal').classList.remove('show');}
+document.getElementById('detailModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+
+// ════════════════
+// DELETE
+// ════════════════
+async function deleteRow(id){
+  if(!confirm('Hapus data siswa ini?'))return;
+  if(false) /* Supabase sudah dikonfigurasi */{
+    showToast('❌ Supabase belum dikonfigurasi');return;
+  }
+  try{
+    const res=await fetch(`${SUPA_URL}/rest/v1/${TABEL}?id=eq.${id}`,{
+      method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+    });
+    if(res.ok){closeModal();showToast('✅ Data berhasil dihapus');loadData();}
+    else showToast('❌ Gagal menghapus: '+res.status);
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+async function deleteAll(){
+  if(!confirm('HAPUS SEMUA data siswa? Tindakan ini tidak bisa dibatalkan!'))return;
+  if(!confirm('Konfirmasi sekali lagi: yakin menghapus SEMUA data?'))return;
+  if(false) /* Supabase sudah dikonfigurasi */{
+    localStorage.removeItem('asesmen_backup');showToast('✅ Data lokal dihapus');loadData();return;
+  }
+  try{
+    const res=await fetch(`${SUPA_URL}/rest/v1/${TABEL}?id=gt.0`,{
+      method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+    });
+    if(res.ok){showToast('✅ Semua data dihapus');loadData();}
+    else showToast('❌ Gagal: '+res.status);
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+// ════════════════
+// EXPORT EXCEL
+// ════════════════
+function exportExcel(){
+  if(!filteredData.length){showToast('Belum ada data');return;}
+  const h=['No','Waktu','Nama Siswa','Kelas','Jurusan','Cita-cita','RIASEC Dominan','Kecerdasan MI','Gaya Belajar','Status CASEL','Prodi SNBP','4 Mapel SNBP','Mapel Rek. Minat-Bakat','Prodi Rekomendasi','Top Karier (%)','Mapel Favorit','Mapel Sesuai','Kesesuaian Mapel','R','I','A','S','E','C'];
+  const rows=filteredData.map((r,i)=>[
+    i+1, r.waktu||r.created_at||'-', r.nama||r.name||'-', r.kelas||'-', r.jurusan||'-',
+    r.cita_cita||r.dream||'-', r.riasec_dominan||'-', r.kecerdasan_mi||'-',
+    r.gaya_belajar||'-', r.status_casel||'-', r.snbp_prodi||'-', r.snbp_mapel||'-',
+    r.mapel_rek_minat||'-', r.prodi_rekomendasi||'-', r.karier_top||'-',
+    r.mapel_favorit||'-', r.mapel_sesuai||'-', r.kesesuaian_pct||'-',
+    r.riasec_R||0, r.riasec_I||0, r.riasec_A||0,
+    r.riasec_S||0, r.riasec_E||0, r.riasec_C||0
+  ]);
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([h,...rows]);
+  ws['!cols']=[{wch:4},{wch:20},{wch:24},{wch:14},{wch:13},{wch:24},{wch:28},{wch:24},{wch:16},{wch:22},{wch:36},{wch:50},{wch:44},{wch:48},{wch:54},{wch:60},{wch:50},{wch:16},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5}];
+  XLSX.utils.book_append_sheet(wb,ws,'Data Siswa');
+  addSummarySheet(wb);
+  XLSX.writeFile(wb,`Rekap_Asesmen_SNBP_${new Date().toISOString().slice(0,10)}.xlsx`);
+  showToast('✅ Excel berhasil diunduh!');
+}
+
+function exportExcelFull(){
+  if(!allData.length){showToast('Belum ada data');return;}
+  const tmpFiltered=filteredData;
+  filteredData=allData;
+  exportExcel();
+  filteredData=tmpFiltered;
+}
+
+function addSummarySheet(wb){
+  // RIASEC dist
+  const rC={R:0,I:0,A:0,S:0,E:0,C:0};
+  allData.forEach(r=>{const t=(r.riasec_dominan||'').charAt(0).toUpperCase();if(rC[t]!==undefined)rC[t]++;});
+  // Dream dist
+  const dC={};allData.forEach(r=>{const d=(r.cita_cita||r.dream||'?').toLowerCase().trim();dC[d]=(dC[d]||0)+1;});
+  const topD=Object.entries(dC).sort(([,a],[,b])=>b-a).slice(0,15);
+  // Mapel favorit dist
+  const mC={};
+  allData.forEach(r=>{(r.mapel_favorit||'').split(',').forEach(m=>{const t=m.trim();if(t)mC[t]=(mC[t]||0)+1;});});
+  const topM=Object.entries(mC).sort(([,a],[,b])=>b-a).slice(0,20);
+  // CASEL dist
+  const cC={'Baik':0,'Cukup Baik':0,'Perlu Perhatian Khusus':0};
+  allData.forEach(r=>{const s=r.status_casel||'';if(s.includes('Baik')&&!s.includes('Cukup')&&!s.includes('Perlu'))cC['Baik']++;else if(s.includes('Cukup'))cC['Cukup Baik']++;else if(s.includes('Perlu'))cC['Perlu Perhatian Khusus']++;});
+  // Avg kesesuaian
+  const pcts=allData.map(r=>parseInt(r.kesesuaian_pct)||0).filter(v=>v>0);
+  const avg=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):0;
+  
+  const rows=[
+    ['RINGKASAN ASESMEN MINAT, BAKAT & SNBP'],
+    [`Total Siswa: ${allData.length}`],
+    [`Tanggal Export: ${new Date().toLocaleString('id-ID')}`],
+    [`Rata-rata Kesesuaian Mapel: ${avg}%`],[''],
+    ['DISTRIBUSI RIASEC DOMINAN'],['Tipe RIASEC','Jumlah Siswa','%'],
+    ...Object.entries(rC).map(([k,v])=>[`${k} - ${({R:'Realistic',I:'Investigative',A:'Artistic',S:'Social',E:'Enterprising',C:'Conventional'})[k]}`,v,allData.length?(v/allData.length*100).toFixed(1)+'%':'-']),
+    [''],['STATUS SOSIAL EMOSIONAL (CASEL)'],['Status','Jumlah Siswa'],
+    ...Object.entries(cC).map(([k,v])=>[k,v]),
+    [''],['TOP 15 CITA-CITA SISWA'],['Cita-cita','Jumlah'],
+    ...topD.map(([k,v])=>[k.charAt(0).toUpperCase()+k.slice(1),v]),
+    [''],['TOP 20 MAPEL FAVORIT SISWA'],['Mata Pelajaran','Jumlah Siswa Memilih'],
+    ...topM.map(([k,v])=>[k,v])
+  ];
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:40},{wch:18},{wch:10}];
+  XLSX.utils.book_append_sheet(wb,ws,'Ringkasan');
+}
+
+// ════════════════
+// TOAST
+// ════════════════
+function showToast(msg,dur=3000){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+</script>
+</body>
+</html>
